@@ -38,7 +38,8 @@ class Errors extends Error {
 
 	/**
 	 * Build a simplified object as instance.get(), handle native Error, return parameter if not an Error.
-	 * @function Errors.get
+	 *
+	 *  @function Errors.get
 	 * @memberof Errors
 	 * @static
 	 * @param  {Errors|Error|*} error Native Error, Enhanced Error, or any.
@@ -55,6 +56,17 @@ class Errors extends Error {
 		return error;
 	}
 
+	/**
+	 * Build Errors or Error from plain object returned by get.<br/>
+	 * Use for serialize / unserialize.<br/>
+	 * Return parameter if parse fail.<br/>
+	 *
+	 * @function Errors.parse
+	 * @memberof Errors
+	 * @static
+	 * @param  {Object} object Object to parse.
+	 * @return {Errors|Error|*} Rebuilt error
+	 */
 	static parse(object) {
 		let error = object;
 		if (error && typeof error === 'object') {
