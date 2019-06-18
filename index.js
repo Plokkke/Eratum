@@ -1,6 +1,11 @@
 const ejs = require('ejs');
 const _ = require('lodash');
 
+
+function stringify(...args) {
+	return args.map(item => require('util').inspect(item, { showHidden: false, depth: null })).join(', ');
+}
+
 /**
  * @extends Error
  * @param {Number} code Unique numeric identifier for this error type.
@@ -98,7 +103,6 @@ class Errors extends Error {
 	 * @return {undefined}
 	 */
 	static register(tag, code, template = '', requiredAttrs = []) {
-		const Validator = require('validator-chain'); // Require at runtime because Validator is cycle dependent
 		Validator(tag, 'tag').exist().instance('String').match(/^[A-Z_]*$/).try();
 		Validator(code, 'code').exist().instance('Number', 'String').try();
 		Validator(template, 'template').exist().instance('String').try();
@@ -165,20 +169,200 @@ Errors.tags = {};
 Errors.class = Errors;
 
 
-function _registerError(tag, code, template = '', requiredAttrs = []) {
-	Errors[tag] = code;
-	Errors.tags[code] = tag;
-	// eslint-disable-next-line func-names
-	Errors[_.camelCase(tag)] = function (parameters = {}) { // Not use arrow syntax to avoird this capture
-		const Validator = require('validator-chain'); // Require at runtime because Validator is cycle dependent
-		Validator(parameters, 'parameters').instance('Object').keys(requiredAttrs).try();
-
-		const error = new Errors(`${tag}(${code})${template && ` - ${ejs.render(template, parameters)}`}`, code, tag, parameters);
-		Error.captureStackTrace(error, this);
-
-		return error;
-	};
+function instanceOf(data) {
+	return (data !== undefined && data !== null) ? data.constructor.name : 'undefined';
 }
+
+function isInstance(item, expectedInstance) {
+	if (item === undefined || item === null) {
+		return expectedInstance === 'undefined';
+	}
+
+	const isFinalInstance = [ 'Boolean', 'Number', 'String', 'Array', 'Object', 'Function' ];
+	const proto = Object.getPrototypeOf(item);
+	const type = instanceOf(proto);
+
+	return (type === expectedInstance) || (!isFinalInstance.includes(type) && isInstance(proto, expectedInstance));
+}
+
+class ValidatorChain {
+	constructor(value, name = '') {
+		this.value = value;
+		this.name = name;
+		this.modifier = true;
+		this.children = [ ];
+		this._isValid = true;
+		this.error = null;
+
+		/* key words */
+		this.must = this;
+		this.have = this;
+		this.has = this;
+		this.been = this;
+		this.be = this;
+		this.is = this;
+		this.are = this;
+		this.a = this;
+		this.an = this;
+		this.and = this;
+		this.of = this;
+	}
+
+	invalidate(error) {
+		this._isValid = false;
+		this.error = error;
+
+		return this;
+	}
+
+	resetModifier() {
+		this.modifier = true;
+
+		return this;
+	}
+
+	get isValid() {
+		return this._isValid && this.children.map(child => child.isValid).reduce((a, b) => a && b, true);
+	}
+
+	get not() {
+		this.modifier = !this.modifier;
+
+		return this;
+	}
+
+	invalidateOn(test, buildError, buildRevError) {
+		if (this.isValid === true) {
+			try {
+				if (test() === this.modifier) {
+					this.invalidate(this.modifier ? buildError() : buildRevError());
+				}
+			} catch (cause) {
+				throw Errors.programingFault({ reason: 'Validation was interupted by unhandeled throws error', cause });
+			}
+		}
+
+		return this.resetModifier();
+	}
+
+	exist() {
+		return this.invalidateOn(() => instanceOf(this.value) === 'undefined',
+			() => Errors.doesntExist({ name: this.name }),
+			() => Errors.exist({ name: this.name }));
+	}
+
+	type(expectedType) {
+		const actualType = typeof this.value;
+
+		return this.invalidateOn(() => actualType !== expectedType,
+			() => Errors.invalidType({ name: this.name, actualType, expectedType: `${expectedType}` }),
+			() => Errors.invalidType({ name: this.name, actualType, expectedType: `!${expectedType}` }));
+	}
+
+	instance(...args) {
+		const expectedTypes = _.flattenDeep(args);
+
+		return this.invalidateOn(() => expectedTypes.map(expectedType => !isInstance(this.value, expectedType)).reduce((a, b) => a && b),
+			() => Errors.invalidType({ name: this.name, actualType: instanceOf(this.value), expectedType: `${expectedTypes.join(', ')}` }),
+			() => Errors.invalidType({ name: this.name, actualType: instanceOf(this.value), expectedType: `!${expectedTypes.join(', ')}` }));
+	}
+
+	match(regex) {
+		return this.invalidateOn(() => !regex.test(this.value),
+			() => Errors.invalidFormat({ name: this.name, value: stringify(this.value), format: `regex(${stringify(regex)})` }),
+			() => Errors.invalidFormat({ name: this.name, value: stringify(this.value), format: `!regex(${stringify(regex)})` }));
+	}
+
+	boolean() {
+		return this.instance('Boolean');
+	}
+
+	number() {
+		return this.instance('Number');
+	}
+
+	string() {
+		return this.instance('String');
+	}
+
+	object() {
+		return this.instance('Object');
+	}
+
+	array() {
+		return this.invalidateOn(() => !Array.isArray(this.value),
+			() => Errors.invalidType({ name: this.name, actualType: instanceOf(this.value), expectedType: 'Array' }),
+			() => Errors.invalidType({ name: this.name, actualType: instanceOf(this.value), expectedType: '!Array' }));
+	}
+
+	each(apply) {
+		try {
+			if (this.isValid === true) {
+				const children = this.value.map((child, idx) => new ValidatorChain(child, `${this.name}[${idx}]`));
+				this.children.push(...children);
+				children.forEach(apply);
+			}
+		} catch (cause) {
+			this.invalidate(Errors.programingFault({ reason: 'Children validation interupted by unhandeled throws error', cause }));
+		}
+
+		return this;
+	}
+
+	keys(...args) {
+		const parameterToValidator = (parameter, index) => {
+			const parameterName = `parameter${index || ''}`;
+			try {
+				const parameterValidator = new ValidatorChain(parameter, parameterName);
+				const actualType = instanceOf(parameter);
+				switch (actualType) {
+				case 'Array':
+					return parameter.map(parameterToValidator);
+				case 'Object':
+					parameterValidator.keys('key', vKey => vKey.string()).try();
+
+					return parameter.optional && instanceOf(this.value[parameter.key]) === 'undefined' ? null : new ValidatorChain(this.value[parameter.key], `${this.name}.${parameter.key}`).exist();
+				case 'String':
+					return new ValidatorChain(this.value[parameter], `${this.name}.${parameter}`).exist();
+				default:
+					throw Errors.invalidType({ name: parameterName, actualType, expectedType: 'Array|String|Object' });
+				}
+			} catch (cause) {
+				throw cause instanceof Errors && cause.code === Errors.INVALID_TYPE ? cause : Errors.invalid({ name: parameterName, cause });
+			}
+		};
+
+		try {
+			if (this.isValid === true) {
+				const [ [ apply ], parameters ] = _.partition(args, arg => isInstance(arg, 'Function'));
+				const children = parameters.map(parameterToValidator);
+				this.children.push(..._.compact(_.flattenDeep(children)));
+				if (this.isValid === true && apply) {
+					apply(...children);
+				}
+			}
+		} catch (cause) {
+			this.invalidate(Errors.programingFault({ reason: 'Children validation was interupted by unhandeled throws error', cause }));
+		}
+
+		return this;
+	}
+
+	try() {
+		if (this._isValid !== true) {
+			throw this.error;
+		}
+		try {
+			this.children.forEach(child => child.try());
+		} catch (cause) {
+			throw Errors.invalid({ name: this.name, cause });
+		}
+
+		return this;
+	}
+}
+
+const Validator = (...args) => new ValidatorChain(...args);
 
 
 /**
@@ -187,28 +371,28 @@ function _registerError(tag, code, template = '', requiredAttrs = []) {
  * @property {Number} CODE 1
  * @property {String} TAG INTERNAL_ERROR
  */
-_registerError('INTERNAL_ERROR', 1, '<% if (locals.reason) { %><%- reason %><% } %>');
+Errors.register('INTERNAL_ERROR', 1, '<% if (locals.reason) { %><%- reason %><% } %>');
 /**
  * @memberof Errors
  * @function unexpectedError
  * @property {Number} CODE 2
  * @property {String} TAG UNEXPECTED_ERROR
  */
-_registerError('UNEXPECTED_ERROR', 2, '<% if (locals.reason) { %><%- reason %><% } %>');
+Errors.register('UNEXPECTED_ERROR', 2, '<% if (locals.reason) { %><%- reason %><% } %>');
 /**
  * @memberof Errors
  * @function programingFault
  * @property {Number} CODE 3
  * @property {String} TAG PROGRAMING_FAULT
  */
-_registerError('PROGRAMING_FAULT', 3, '<% if (locals.reason) { %><%- reason %><% } %>');
+Errors.register('PROGRAMING_FAULT', 3, '<% if (locals.reason) { %><%- reason %><% } %>');
 /**
  * @memberof Errors
  * @function notYetImplemented
  * @property {Number} CODE 4
  * @property {String} TAG NOT_YET_IMPLEMENTED
  */
-_registerError('NOT_YET_IMPLEMENTED', 4, 'Feature(<%- name %>) is not yet implemented.<% if (locals.reason) { %><%- reason %><% } %>', [ 'name' ]);
+Errors.register('NOT_YET_IMPLEMENTED', 4, 'Feature(<%- name %>) is not yet implemented.<% if (locals.reason) { %><%- reason %><% } %>', [ 'name' ]);
 
 
 /**
@@ -217,14 +401,14 @@ _registerError('NOT_YET_IMPLEMENTED', 4, 'Feature(<%- name %>) is not yet implem
  * @property {Number} CODE 100
  * @property {String} TAG INITIALIZED
  */
-_registerError('INITIALIZED', 100, 'Resource(<%- name %>) is already initialized.', [ 'name' ]);
+Errors.register('INITIALIZED', 100, 'Resource(<%- name %>) is already initialized.', [ 'name' ]);
 /**
  * @memberof Errors
  * @function notInitialized
  * @property {Number} CODE 101
  * @property {String} TAG NOT_INITIALIZED
  */
-_registerError('NOT_INITIALIZED', 101, 'Resource(<%- name %>) is not initialized.', [ 'name' ]);
+Errors.register('NOT_INITIALIZED', 101, 'Resource(<%- name %>) is not initialized.', [ 'name' ]);
 
 /**
  * @memberof Errors
@@ -232,14 +416,14 @@ _registerError('NOT_INITIALIZED', 101, 'Resource(<%- name %>) is not initialized
  * @property {Number} CODE 110
  * @property {String} TAG INVALID
  */
-_registerError('INVALID', 110, '<%- name %> is invalid.<% if (locals.reason) { %><%- reason %><% } %>', [ 'name' ]);
+Errors.register('INVALID', 110, '<%- name %> is invalid.<% if (locals.reason) { %><%- reason %><% } %>', [ 'name' ]);
 /**
  * @memberof Errors
  * @function invalidType
  * @property {Number} CODE 111
  * @property {String} TAG INVALID_TYPE
  */
-_registerError('INVALID_TYPE', 111, '<%- name %> as invalid type(<%- actualType %>) instead of (<%- expectedType %>).', [ 'name', 'actualType', 'expectedType' ]);
+Errors.register('INVALID_TYPE', 111, '<%- name %> as invalid type(<%- actualType %>) instead of (<%- expectedType %>).', [ 'name', 'actualType', 'expectedType' ]);
 
 /**
  * @memberof Errors
@@ -247,14 +431,14 @@ _registerError('INVALID_TYPE', 111, '<%- name %> as invalid type(<%- actualType 
  * @property {Number} CODE 112
  * @property {String} TAG EXIST
  */
-_registerError('EXIST', 112, 'Resource(<%- name %>) exist.', [ 'name' ]);
+Errors.register('EXIST', 112, 'Resource(<%- name %>) exist.', [ 'name' ]);
 /**
  * @memberof Errors
  * @function doesntExist
  * @property {Number} CODE 113
  * @property {String} TAG DOESNT_EXIST
  */
-_registerError('DOESNT_EXIST', 113, 'Resource(<%- name %>) doesn\'t exist.', [ 'name' ]);
+Errors.register('DOESNT_EXIST', 113, 'Resource(<%- name %>) doesn\'t exist.', [ 'name' ]);
 
 /**
  * @memberof Errors
@@ -262,14 +446,14 @@ _registerError('DOESNT_EXIST', 113, 'Resource(<%- name %>) doesn\'t exist.', [ '
  * @property {Number} CODE 114
  * @property {String} TAG EQUAL
  */
-_registerError('EQUAL', 114, '<%- name %>(<%- value %>) is forbidden', [ 'name', 'value' ]);
+Errors.register('EQUAL', 114, '<%- name %>(<%- value %>) is forbidden', [ 'name', 'value' ]);
 /**
  * @memberof Errors
  * @function notEqual
  * @property {Number} CODE 115
  * @property {String} TAG NOT_EQUAL
  */
-_registerError('NOT_EQUAL', 115, '<%- name %>(<%- actualValue %>) is not equal to <%- expectedValue %>', [ 'name', 'actualValue', 'expectedValue' ]);
+Errors.register('NOT_EQUAL', 115, '<%- name %>(<%- actualValue %>) is not equal to <%- expectedValue %>', [ 'name', 'actualValue', 'expectedValue' ]);
 
 /**
  * @memberof Errors
@@ -277,28 +461,28 @@ _registerError('NOT_EQUAL', 115, '<%- name %>(<%- actualValue %>) is not equal t
  * @property {Number} CODE 116
  * @property {String} TAG GREATER_THAN
  */
-_registerError('GREATER_THAN', 116, '<%- name %>(<%- value %>) is greater than <%- limit %>', [ 'name', 'value', 'limit' ]);
+Errors.register('GREATER_THAN', 116, '<%- name %>(<%- value %>) is greater than <%- limit %>', [ 'name', 'value', 'limit' ]);
 /**
  * @memberof Errors
  * @function notGreaterThan
  * @property {Number} CODE 117
  * @property {String} TAG NOT_GREATER_THAN
  */
-_registerError('NOT_GREATER_THAN', 117, '<%- name %>(<%- value %>) is not greater than <%- limit %>', [ 'name', 'value', 'limit' ]);
+Errors.register('NOT_GREATER_THAN', 117, '<%- name %>(<%- value %>) is not greater than <%- limit %>', [ 'name', 'value', 'limit' ]);
 /**
  * @memberof Errors
  * @function lowerThan
  * @property {Number} CODE 118
  * @property {String} TAG LOWER_THAN
  */
-_registerError('LOWER_THAN', 118, '<%- name %>(<%- value %>) is lower than <%- limit %>', [ 'name', 'value', 'limit' ]);
+Errors.register('LOWER_THAN', 118, '<%- name %>(<%- value %>) is lower than <%- limit %>', [ 'name', 'value', 'limit' ]);
 /**
  * @memberof Errors
  * @function notLowerThan
  * @property {Number} CODE 119
  * @property {String} TAG NOT_LOWER_THAN
  */
-_registerError('NOT_LOWER_THAN', 119, '<%- name %>(<%- value %>) is not lower than <%- limit %>', [ 'name', 'value', 'limit' ]);
+Errors.register('NOT_LOWER_THAN', 119, '<%- name %>(<%- value %>) is not lower than <%- limit %>', [ 'name', 'value', 'limit' ]);
 
 /**
  * @memberof Errors
@@ -306,21 +490,21 @@ _registerError('NOT_LOWER_THAN', 119, '<%- name %>(<%- value %>) is not lower th
  * @property {Number} CODE 120
  * @property {String} TAG INCLUDED
  */
-_registerError('INCLUDED', 120, '<%- name %>(<%- value %>) is included in <%- forbiddenValues %>', [ 'name', 'value', 'forbiddenValues' ]);
+Errors.register('INCLUDED', 120, '<%- name %>(<%- value %>) is included in <%- forbiddenValues %>', [ 'name', 'value', 'forbiddenValues' ]);
 /**
  * @memberof Errors
  * @function notIncluded
  * @property {Number} CODE 121
  * @property {String} TAG NOT_INCLUDED
  */
-_registerError('NOT_INCLUDED', 121, '<%- name %>(<%- value %>) is not included in <%- possibleValues %>', [ 'name', 'value', 'possibleValues' ]);
+Errors.register('NOT_INCLUDED', 121, '<%- name %>(<%- value %>) is not included in <%- possibleValues %>', [ 'name', 'value', 'possibleValues' ]);
 /**
  * @memberof Errors
  * @function invalidFormat
  * @property {Number} CODE 122
  * @property {String} TAG INVALID_FORMAT
  */
-_registerError('INVALID_FORMAT', 122, '<%- name %>(<%- value %>) format is not valid(<%- format %>)', [ 'name', 'value', 'format' ]);
+Errors.register('INVALID_FORMAT', 122, '<%- name %>(<%- value %>) format is not valid(<%- format %>)', [ 'name', 'value', 'format' ]);
 
 
 module.exports = Errors;
