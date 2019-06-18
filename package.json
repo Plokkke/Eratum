@@ -1,0 +1,40 @@
+{
+	"name": "eratum",
+	"version": "1.0.0",
+	"author": "Antoine Caron <acaron@trustdesigner.com>",
+	"license": "MIT",
+	"description": "Module defining wrapper over Error class.",
+	"keywords": [
+		"Errors",
+		"Throws",
+		"Rejections",
+		"Failures"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git://gitlab.com:antoinecaron/eratum.git"
+	},
+	"main": "index.js",
+	"scripts": {
+		"test": "NODE_ENV=test mocha --bail --exit --timeout 999999 tests/tests.js",
+		"coverage": "NODE_ENV=test nyc --reporter=html --reporter=text-summary npm test"
+	},
+	"nyc": {
+		"exclude": "**/tests/*"
+	},
+	"dependencies": {
+		"ejs": "^2.6.1",
+		"lodash": "^4.17.11"
+	},
+	"peerDependencies": {
+		"validator-chain": "git+ssh://git@gitlab.com:antoinecaron/validator-chain.git#release/1.0"
+	},
+	"devDependencies": {
+		"mocha": "^4.0.1",
+		"nyc": "^11.3.0",
+		"should": "^13.2.3",
+		"should-sinon": "0.0.6",
+		"sinon": "^7.3.2",
+		"supertest": "^3.4.2"
+	}
+}
