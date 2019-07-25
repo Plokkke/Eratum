@@ -1,0 +1,11 @@
+node_modules/
+coverage/
+.nyc_output/
+docs/
+
+npm-debug.log
+*.db
+*.sqlite3
+*.tmp
+
+.DS_Store
