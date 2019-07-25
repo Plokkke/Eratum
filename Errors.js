@@ -53,6 +53,10 @@ class Errors extends Error {
 			return _.pick(error, [ 'message', ...((Errors.isStackEnabled && [ 'stack' ]) || []) ]);
 		}
 
+		if (Array.isArray(error)) {
+			return error.map(err => Errors.get(err));
+		}
+
 		return error;
 	}
 
@@ -70,6 +74,9 @@ class Errors extends Error {
 	static parse(object) {
 		let error = object;
 		if (error && typeof error === 'object') {
+			if (Array.isArray(error)) {
+				return error.map(err => Errors.parse(err));
+			}
 			const { message, code, tag, cause, stack, ...parameters } = error;
 			if (message && code && tag) {
 				error = new Errors(message, code, tag, { cause: Errors.parse(cause), ...parameters });
@@ -98,6 +105,7 @@ class Errors extends Error {
 	 * @return {undefined}
 	 */
 	static register(tag, code, template = '', requiredAttrs = []) {
+		// eslint-disable-next-line global-require
 		const Validator = require('./validator.js');
 		Validator(tag, 'tag').exist().instance('String').match(/^[A-Z_]*$/).try();
 		Validator(code, 'code').exist().instance('Number', 'String').try();

@@ -1,9 +1,10 @@
 const _ = require('lodash');
+const util = require('util');
 
 const Errors = require('./Errors.js');
 
 function stringify(...args) {
-	return args.map(item => require('util').inspect(item, { showHidden: false, depth: null })).join(', ');
+	return args.map(item => util.inspect(item, { showHidden: false, depth: null })).join(', ');
 }
 
 function instanceOf(data) {

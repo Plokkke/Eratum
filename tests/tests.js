@@ -205,17 +205,30 @@ describe('Erros unit tests', () => {
 	describe('Errors.parse()', () => {
 		it('Invalid error should return self object', () => {
 			// Errors.isStackEnabled = true;
-			[ undefined, 12, [ ], { a: 12, stack: true }, { message: 'bonjour', age: 14 } ].forEach((invalidError) => {
+			[ undefined, 12, { a: 12, stack: true }, { message: 'bonjour', age: 14 } ].forEach((invalidError) => {
 				should(Errors.parse(invalidError)).equal(invalidError);
 			});
 		});
 		it('valid error should return Error object', () => {
-			const error = { message: 'bonjour' };
-			should(Errors.parse(error)).instanceof(Error);
+			const errorObj = { message: 'bonjour' };
+			const error = Errors.parse(errorObj);
+			should(error).instanceof(Error);
+			error.should.property('message').equals(errorObj.message);
+		});
+		it('valid error array should return Error array', () => {
+			const errorObjs = [ { message: 'bonjour' }, { message: 'coucou' } ];
+			const errors = Errors.parse(errorObjs);
+			should(errors).instanceof(Array);
+			errors.forEach((error, idx) => {
+				error.should.property('message').equals(errorObjs[idx].message);
+			});
 		});
 		it('valid error should return Error object with stack', () => {
-			const error = { message: 'bonjour', stack: 'test' };
-			should(Errors.parse(error)).instanceof(Error).property('stack').equal(error.stack);
+			const errorObj = { message: 'bonjour', stack: 'test' };
+			const error = Errors.parse(errorObj);
+			should(error).instanceof(Error);
+			error.should.property('message').equals(errorObj.message);
+			error.should.property('stack').equal(errorObj.stack);
 		});
 		it('valid error should return Errors object', () => {
 			const error = { message: 'bonjour', code: '45', tag: 'BONJOUR' };
@@ -226,7 +239,9 @@ describe('Erros unit tests', () => {
 			const cause1 = { message: 'coucou', code: '17', tag: 'COUCOU', cause: cause2 };
 			const error = { message: 'bonjour', code: '45', tag: 'BONJOUR', cause: cause1 };
 			const built = Errors.parse(error);
-			should(built).instanceof(Errors).property('cause').instanceof(Errors).property('cause').instanceof(Errors);
+			should(built).instanceof(Errors).property('cause').instanceof(Errors)
+				.property('cause')
+				.instanceof(Errors);
 		});
 	});
 });
