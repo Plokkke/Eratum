@@ -17,11 +17,23 @@
 	"main": "index.js",
 	"scripts": {
 		"test": "mocha -r ts-node/register **/*.test.ts",
-		"coverage": "nyc -r lcov -e .ts -x \"*.test.ts\" npm run test"
+		"coverage": "nyc npm run test"
 	},
 	"nyc": {
-		"include": "sources",
-		"exclude": "**/*.test.ts/"
+		"extension": [
+			".ts"
+		],
+		"include": [
+			"sources"
+		],
+		"exclude": [
+			"**/*.test.ts/",
+			"sources/Validator.ts"
+		],
+		"reporter": [
+			"text-summary",
+			"html"
+		]
 	},
 	"dependencies": {
 		"@types/ejs": "^2.6.3",

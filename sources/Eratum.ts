@@ -17,7 +17,6 @@ export interface IEratum {
 }
 
 export type EratumConstructor = { new(message: string, tag: string, options: EratumOptions): Eratum };
-export type ChildEratumConstructor<T extends Eratum> = { new(message: string, options: EratumOptions): T };
 
 /**
  * @extends Error

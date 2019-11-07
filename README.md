@@ -4,8 +4,8 @@
 
 ### Simple case
 
-```javascript
-const Errors = require('eratum');
+```typescript
+import Errors from 'eratum';
 
 throw Errors.notYetImplemented({ name: 'awesomeFeature', reason: 'Planned in v2.3' });
 // or
@@ -15,7 +15,7 @@ Promise.reject(Errors.notYetImplemented({ name: 'awesomeFeature', reason: 'Plann
 ### Nested case
 
 ```javascript
-const Errors = require('eratum');
+import Errors from 'eratum';
 
 try {
 	try {
@@ -34,16 +34,15 @@ try {
 ## Extends
 
 ```javascript
-const Errors = require('eratum');
+import Errors, { registerError } from 'eratum';
 
-Errors.registerError('OUT_OF_BOUND', 1000, 'Resource(<%= name %>) is out of bound(<%= bound %>)', [ 'name', 'bound' ] );
+registerError('outOfBound', 'Resource(<%= name %>) is out of bound(<%= bound %>)', [ 'name', 'bound' ] );
 
 try {
 	throw Errors.outOfBound({ name: 14, bound: 10 });
 } catch (error) {
-	if (error.code === Errors.OUT_OF_BOUND) {
-		//TODO
-	}
+	if (error instanceOf Errors.outOfBound.class) { }
+	if (error.tag === Errors.outOfBound.tag) { }
 }
 ```
 

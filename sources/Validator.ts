@@ -69,9 +69,9 @@ class Validator implements IValidator {
 		const childrenErrors = this.children.map(child => child.error).filter(error => !!error);
 		if (childrenErrors.length) {
 			if (childrenErrors.length === 1) {
-				return Errors.factory.invalid({ name: this.name, cause: childrenErrors[0] });
+				return Errors.invalid({ name: this.name, cause: childrenErrors[0] });
 			}
-			return Errors.factory.invalid({ name: this.name, cause: childrenErrors });
+			return Errors.invalid({ name: this.name, cause: childrenErrors });
 		}
 
 		return null;
@@ -91,7 +91,7 @@ class Validator implements IValidator {
 					this.invalidate(builder());
 				}
 			} catch (cause) {
-				throw Errors.factory.programingFault({ reason: 'Validation was interupted by unhandeled throws error', cause });
+				throw Errors.programingFault({ reason: 'Validation was interupted by unhandeled throws error', cause });
 			}
 		}
 
@@ -122,27 +122,27 @@ class Validator implements IValidator {
 		try {
 			chain(this);
 		} catch (cause) {
-			this.invalidate(Errors.factory.programingFault({ reason: 'Validation was interupted by unhandeled throws error', cause }));
+			this.invalidate(Errors.programingFault({ reason: 'Validation was interupted by unhandeled throws error', cause }));
 		}
 		return this;
 	}
 
 	exist() {
 		return this.invalidateOn(() => instanceOf(this.value) === 'undefined',
-			() => Errors.factory.doesntExist({ name: this.name }),
-			() => Errors.factory.exist({ name: this.name }));
+			() => Errors.doesntExist({ name: this.name }),
+			() => Errors.exist({ name: this.name }));
 	}
 
 	instance(expectedType: string | Function): this {
 		return this.invalidateOn(() => !isInstance(this.value, expectedType),
-			() => Errors.factory.invalidType({ name: this.name, actualType: instanceOf(this.value), expectedType: `${expectedType}` }),
-			() => Errors.factory.invalidType({ name: this.name, actualType: instanceOf(this.value), expectedType: `!${expectedType}` }));
+			() => Errors.invalidType({ name: this.name, actualType: instanceOf(this.value), expectedType: `${expectedType}` }),
+			() => Errors.invalidType({ name: this.name, actualType: instanceOf(this.value), expectedType: `!${expectedType}` }));
 	}
 
 	match(regex: RegExp) {
 		return this.invalidateOn(() => !regex.test(this.value),
-			() => Errors.factory.invalidFormat({ name: this.name, value: stringify(this.value), format: `regex(${stringify(regex)})` }),
-			() => Errors.factory.invalidFormat({ name: this.name, value: stringify(this.value), format: `!regex(${stringify(regex)})` }));
+			() => Errors.invalidFormat({ name: this.name, value: stringify(this.value), format: `regex(${stringify(regex)})` }),
+			() => Errors.invalidFormat({ name: this.name, value: stringify(this.value), format: `!regex(${stringify(regex)})` }));
 	}
 
 	string() {
@@ -155,8 +155,8 @@ class Validator implements IValidator {
 
 	array() {
 		return this.invalidateOn(() => !Array.isArray(this.value),
-			() => Errors.factory.invalidType({ name: this.name, actualType: instanceOf(this.value), expectedType: 'Array' }),
-			() => Errors.factory.invalidType({ name: this.name, actualType: instanceOf(this.value), expectedType: '!Array' }));
+			() => Errors.invalidType({ name: this.name, actualType: instanceOf(this.value), expectedType: 'Array' }),
+			() => Errors.invalidType({ name: this.name, actualType: instanceOf(this.value), expectedType: '!Array' }));
 	}
 
 	function(): this {
@@ -167,7 +167,7 @@ class Validator implements IValidator {
 		Validator.create(args, 'or.args').each(vChain => vChain.function()).try();
 
 		if (!this.modifier) {
-			throw Errors.factory.programingFault({ reason: '"or" should not be use with not modifier' });
+			throw Errors.programingFault({ reason: '"or" should not be use with not modifier' });
 		}
 
 		try {
@@ -175,11 +175,11 @@ class Validator implements IValidator {
 				const errors = _.compact(args.map(apply => Validator.create(this.value, this.name).apply(apply).error));
 
 				if (errors.length === args.length) {
-					this.invalidate(Errors.factory.invalid({ name: this.name, cause: errors }));
+					this.invalidate(Errors.invalid({ name: this.name, cause: errors }));
 				}
 			}
 		} catch (cause) {
-			this.invalidate(Errors.factory.programingFault({ reason: '"or" validation was interupted by unhandeled throws error', cause }));
+			this.invalidate(Errors.programingFault({ reason: '"or" validation was interupted by unhandeled throws error', cause }));
 		}
 
 		return this;
@@ -187,7 +187,7 @@ class Validator implements IValidator {
 
 	each(apply: ChainApplier): this {
 		if (!this.modifier) {
-			throw Errors.factory.programingFault({ reason: '"each" should not be use with not modifier' });
+			throw Errors.programingFault({ reason: '"each" should not be use with not modifier' });
 		}
 
 		try {
@@ -197,7 +197,7 @@ class Validator implements IValidator {
 				children.forEach(apply);
 			}
 		} catch (cause) {
-			this.invalidate(Errors.factory.programingFault({ reason: 'Children validation interupted by unhandeled throws error', cause }));
+			this.invalidate(Errors.programingFault({ reason: 'Children validation interupted by unhandeled throws error', cause }));
 		}
 
 		return this;
@@ -205,7 +205,7 @@ class Validator implements IValidator {
 
 	keys(...args: PropsApplier[]): this {
 		if (!this.modifier) {
-			throw Errors.factory.programingFault({ reason: '"keys" should not be use with not modifier' });
+			throw Errors.programingFault({ reason: '"keys" should not be use with not modifier' });
 		}
 
 		try {
@@ -218,7 +218,7 @@ class Validator implements IValidator {
 				switch (typeof arg) {
 					case 'string': applier = { ...applier, key: arg }; break;
 					case 'object': applier = { ...applier, ...arg }; break;
-					default: throw Errors.factory.invalidType({ name: `appliers[${idx}]`, actualType: instanceOf(arg), expectedType: 'String|Object' });
+					default: throw Errors.invalidType({ name: `appliers[${idx}]`, actualType: instanceOf(arg), expectedType: 'String|Object' });
 				}
 				return applier as SafePropsApplier;
 			});
@@ -230,7 +230,7 @@ class Validator implements IValidator {
 				);
 			}
 		} catch (cause) {
-			this.invalidate(Errors.factory.programingFault({ reason: '"keys" validation was interupted by unhandeled throws error', cause }));
+			this.invalidate(Errors.programingFault({ reason: '"keys" validation was interupted by unhandeled throws error', cause }));
 		}
 
 		return this;
