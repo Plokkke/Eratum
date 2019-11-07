@@ -1,0 +1,19 @@
+{
+	"compilerOptions": {
+		"target": "ES2018",
+		"module": "commonjs",
+		"sourceMap": true,
+		"outDir": "./build",
+		"strict": true,
+		"strictNullChecks": true,
+		"alwaysStrict": true,
+		"moduleResolution": "node",
+		"baseUrl": ".",
+		"paths": {
+			"#project/*": [
+				"sources/*"
+			]
+		},
+		"esModuleInterop": true
+	}
+}

@@ -1,6 +1,6 @@
 {
 	"name": "eratum",
-	"version": "1.2.0",
+	"version": "2.0.0",
 	"author": "Antoine Caron <acaron@trustdesigner.com>",
 	"license": "MIT",
 	"description": "Module defining wrapper over Error class.",
@@ -16,22 +16,28 @@
 	},
 	"main": "index.js",
 	"scripts": {
-		"test": "NODE_ENV=test mocha --bail --exit --timeout 999999 tests/tests.js",
-		"coverage": "NODE_ENV=test nyc --reporter=html --reporter=text-summary npm test"
+		"test": "mocha -r ts-node/register **/*.test.ts",
+		"coverage": "nyc -r lcov -e .ts -x \"*.test.ts\" npm run test"
 	},
 	"nyc": {
-		"exclude": "**/tests/*"
+		"include": "sources",
+		"exclude": "**/*.test.ts/"
 	},
 	"dependencies": {
-		"ejs": "^2.6.1",
-		"lodash": "^4.17.11"
+		"@types/ejs": "^2.6.3",
+		"@types/lodash": "^4.14.145",
+		"@types/node": "^12.12.6",
+		"ejs": "^2.7.1",
+		"lodash": "^4.17.15"
 	},
 	"devDependencies": {
-		"mocha": "^4.0.1",
+		"@types/chai": "^4.2.4",
+		"@types/mocha": "^5.2.7",
+		"chai": "^4.2.0",
+		"mocha": "^4.1.0",
 		"nyc": "^11.3.0",
-		"should": "^13.2.3",
-		"should-sinon": "0.0.6",
-		"sinon": "^7.3.2",
-		"supertest": "^3.4.2"
+		"ts-mocha": "^6.0.0",
+		"ts-node": "^8.4.1",
+		"typescript": "^3.7.2"
 	}
 }
