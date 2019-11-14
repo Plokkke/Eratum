@@ -10,12 +10,12 @@ npm install --save eratum
 ### Import
 ```javascript
 // Old way
-const { Errors } = require('eratum');
+const { default: Errors, registerError } = require('eratum');
 ```
 
 ```typescript
 // Module way
-import Errors from 'eratum';
+import Errors, { registerError } from 'eratum';
 ```
 
 ### Throw

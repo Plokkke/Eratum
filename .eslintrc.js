@@ -7,7 +7,7 @@ module.exports = {
 		mocha: true,
 	},
 	globals: {
-		Promise: "off",
+		Promise: 'off',
 	},
 	parserOptions: {
 		ecmaVersion: 9,
@@ -28,7 +28,7 @@ module.exports = {
 		curly: [ 'error', 'all' ],
 		eqeqeq: [ 'error', 'always' ],
 		'function-paren-newline': [ 'error', 'consistent' ],
-		'import/no-dynamic-require': false,
+		'import/no-dynamic-require': 0,
 		indent: [ 'error', 'tab', { ignoredNodes: [ 'ConditionalExpression' ] } ],
 		'max-len': [ 1, 200 ],
 		'newline-per-chained-call': [ 'off' ],

@@ -14,9 +14,9 @@
 		"type": "git",
 		"url": "git://gitlab.com:antoinecaron/eratum.git"
 	},
-	"main": "index.js",
+	"main": "sources/index.ts",
 	"scripts": {
-		"test": "mocha -r ts-node/register **/*.test.ts",
+		"test": "mocha -r ts-node/register **/*.test.ts **/*.test.js",
 		"coverage": "nyc npm run test"
 	},
 	"nyc": {
@@ -37,19 +37,22 @@
 	},
 	"dependencies": {
 		"@types/ejs": "^2.6.3",
-		"@types/lodash": "^4.14.145",
-		"@types/node": "^12.12.6",
-		"ejs": "^2.7.1",
+		"@types/lodash": "^4.14.147",
+		"@types/node": "^12.12.7",
+		"ejs": "^2.7.2",
 		"lodash": "^4.17.15"
 	},
 	"devDependencies": {
-		"@types/chai": "^4.2.4",
+		"@types/chai": "^4.2.5",
 		"@types/mocha": "^5.2.7",
 		"chai": "^4.2.0",
+		"eslint": "^6.6.0",
+		"eslint-config-airbnb-base": "^14.0.0",
+		"eslint-plugin-import": "^2.18.2",
 		"mocha": "^4.1.0",
 		"nyc": "^11.3.0",
 		"ts-mocha": "^6.0.0",
-		"ts-node": "^8.4.1",
+		"ts-node": "^8.5.0",
 		"typescript": "^3.7.2"
 	}
 }

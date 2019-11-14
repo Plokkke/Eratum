@@ -3,7 +3,7 @@ import 'mocha';
 
 import Errors, { Eratum, registerError, parseError } from '../sources/index';
 
-describe('Erros unit tests', () => {
+describe('Typescript Errors unit tests', () => {
 	describe('Registered error controls', () => {
 		it('registerError(\'specificInvalid\') should create tag and constructor', () => {
 			const tag = 'SPECIFIC_INVALID';
@@ -16,6 +16,12 @@ describe('Erros unit tests', () => {
 
 			const error = Errors[name]();
 			expect(error.tag).equal(tag);
+		});
+		it('register should generate unique class', () => {
+			const error = Errors.programingFault();
+			expect(Errors.programingFault.class).not.equal(Errors.internalError.class);
+			expect(error).instanceOf(Errors.programingFault.class);
+			expect(error).not.instanceOf(Errors.internalError.class);
 		});
 		it('registerError(\'outOfBound\', ...) should create tag and constructor', () => {
 			const tag = 'OUT_OF_BOUND';
@@ -51,7 +57,7 @@ describe('Erros unit tests', () => {
 		});
 	});
 
-	describe('build error controls', () => {
+	describe('Produce error controls', () => {
 		it('Errors.exist() should throw DOESNT_EXIST error', () => {
 			try {
 				Errors.exist();
@@ -66,7 +72,7 @@ describe('Erros unit tests', () => {
 	});
 
 	describe('Errors.get() return validation', () => {
-		it('should build error object', () => {
+		it('Should build error object', () => {
 			Eratum.isStackEnabled = true;
 			const error = Errors.internalError();
 			const errorObj = error.get();
@@ -74,7 +80,7 @@ describe('Erros unit tests', () => {
 			expect(errorObj).property('tag').equals(Errors.internalError.tag);
 			expect(errorObj).property('stack');
 		});
-		it('should build neasted error with no object cause', () => {
+		it('Should build neasted error with no object cause', () => {
 			Eratum.isStackEnabled = true;
 			const cause = 'notAnObject';
 			const error = Errors.internalError({ cause });
@@ -84,7 +90,7 @@ describe('Erros unit tests', () => {
 			expect(errorObj).property('stack');
 			expect(errorObj).property('cause').equals(cause);
 		});
-		it('should build neasted error object', () => {
+		it('Should build neasted error object', () => {
 			Eratum.isStackEnabled = true;
 			const message = 'Some bug';
 			const error = Errors.internalError({ cause: Errors.internalError({ cause: new RangeError(message) }) });
@@ -100,7 +106,7 @@ describe('Erros unit tests', () => {
 			expect(errorObj.cause.cause).property('message').equals(message);
 			expect(errorObj.cause.cause).property('stack');
 		});
-		it('should build neasted error object in production env', () => {
+		it('Should build neasted error object in production env', () => {
 			Eratum.isStackEnabled = false;
 			const message = 'Some bug';
 			const error = Errors.internalError({ cause: Errors.internalError({ cause: new RangeError(message) }) });
@@ -116,6 +122,21 @@ describe('Erros unit tests', () => {
 			expect(errorObj.cause.cause).property('message').equals(message);
 			expect(errorObj.cause.cause).not.property('stack');
 		});
+		it('Should build neasted error object with array cause', () => {
+			const message = 'Some bug';
+			const error = Errors.internalError({ cause: [Errors.internalError(), new RangeError(message), 42] });
+			const errorObj = error.get();
+
+			expect(errorObj).property('message');
+			expect(errorObj).property('tag').equals(Errors.internalError.tag);
+			expect(errorObj).property('cause').an('array').property('length').equal(3);
+			expect(errorObj.cause[0]).an('object');
+			expect(errorObj.cause[0]).property('message');
+			expect(errorObj.cause[0]).property('tag').equals(Errors.internalError.tag);
+			expect(errorObj.cause[1]).an('object');
+			expect(errorObj.cause[1]).property('message').equals(message);
+			expect(errorObj.cause[2]).a('number');
+		});
 	});
 
 	describe('parseError()', () => {
@@ -125,33 +146,46 @@ describe('Erros unit tests', () => {
 				expect(parseError(invalidError)).equals(invalidError);
 			});
 		});
-		it('valid error should return Error object', () => {
+		it('Valid error should return Error object', () => {
 			const errorObj = { message: 'bonjour' };
 			const error = parseError(errorObj);
 			expect(error).instanceof(Error).property('message').equals(errorObj.message);
 		});
-		it('valid error array should return Error array', () => {
+		it('Valid error array should return Error array', () => {
 			const errorObjs = [{ message: 'bonjour' }, { message: 'coucou' }];
 			const errors: Eratum[] = parseError(errorObjs);
 			errors.forEach((error, idx) => {
 				expect(error).instanceof(Error).property('message').equals(errorObjs[idx].message);
 			});
 		});
-		it('valid error should return Error object with stack', () => {
+		it('Valid error should return Error object with stack', () => {
 			const errorObj = { message: 'bonjour', stack: 'test' };
 			const error = parseError(errorObj);
 			expect(error).instanceof(Error);
 			expect(error).property('message').equals(errorObj.message);
 			expect(error).property('stack').equals(errorObj.stack);
 		});
-		it('valid error should return Errors object', () => {
+		it('Valid error should return Eratum object', () => {
 			const errorFactory = Errors.exist;
 			const error = { message: 'bonjour', tag: errorFactory.tag };
 			const built = parseError(error);
 			expect(built).instanceof(errorFactory.class);
 			expect(built).property('message').equals(error.message);
 		});
-		it('valid error should return Errors object with neasted cause', () => {
+		it('Invalid error should throw doesntExist error', () => {
+			const errorProducer = Errors.doesntExist;
+			const unknowTag = 'UNKNOWN_TAG';
+			const error = { message: 'bonjour', tag: unknowTag };
+			try {
+				parseError(error);
+			} catch (error) {
+				expect(error).instanceOf(errorProducer.class);
+				expect(error).property('tag').equal(errorProducer.tag);
+				expect(error).property('parameters').a('object');
+				expect(error.parameters).property('name').equal(`Errors.${unknowTag}`);
+			}
+		});
+		it('Valid error should return Eratum object with neasted cause', () => {
 			const cause2Factory = Errors.exist;
 			const cause2 = { message: 'Mami', tag: cause2Factory.tag };
 			const cause1Factory = Errors.invalidFormat;
