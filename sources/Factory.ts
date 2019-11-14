@@ -2,7 +2,16 @@ import ejs from 'ejs';
 import _ from 'lodash';
 
 import { ValidatorFactory } from './IValidator';
-import { EratumOptions, Eratum, IEratum } from './Eratum';
+import { Eratum, IEratum } from './Eratum';
+
+/**
+ * Eratum constructor options
+ */
+export interface EratumOptions {
+	cause?: any;
+	origin?: string;
+	[key: string]: any;
+}
 
 interface EratumProducer {
 	(parameters?: EratumOptions): Eratum;
@@ -33,39 +42,38 @@ function findFactory(identifier: string) {
 }
 
 function setupProducer(tag: string, template: string, requiredAttrs: string[]): EratumProducer {
-	const producer = function (this: Function, parameters: EratumOptions = {}): Eratum { // Not use arrow syntax to avoid 'this' capture
-		Validator(parameters, 'parameters').object().keys(...requiredAttrs).try();
-		const error = new (producer.class)(`${tag}${template && ` - ${ejs.render(template, parameters)}`}`, parameters);
+	const producerClass = class extends Eratum {
+		public parameters: { [key: string]: any; };
+		constructor(message: string, { cause, origin, ...parameters }: EratumOptions) {
+			super(message, tag, cause, origin);
+			this.parameters = parameters;
+		}
+	};
+	const producer = function (this: Function, parameters: EratumOptions = {}): any { // Not use arrow syntax to avoid 'this' capture
+		Validator(parameters, 'parameters').exist().object().keys(...requiredAttrs).try();
+		const error = new producerClass(_.compact([tag, ejs.render(template, parameters)]).join(' - '), parameters);
 		Error.captureStackTrace(error, this);
 
 		return error;
-	} as EratumProducer;
-	producer.tag = tag;
-	producer.class = class extends Eratum {
-		constructor(message: string, options: EratumOptions) { super(message, producer.tag, options); }
 	};
+	producer.tag = tag;
+	producer.class = producerClass;
 	return producer;
 }
 
 /**
- * Register tag as key in Factory, with code as value.<br/>
- * Register code as key in Factory.tags, with tag as value.<br/>
- * Register function tag in camel case in this for error generation.<br/>
- * @function Errors.register
- * @memberof Errors
- * @static
- * @param {String} tag Unique string identifier for this error type. Must be snake case (/^[A-Z_]*$/).
- * @param {Number} code Unique numeric identifier for this error type.
+ * Register error by name<br/>
+ * @param {String} name Unique string name for this error type. Must be camel case (/^[a-z][a-zA-Z]*$/).
  * @param {String} [template=''] EJS template to build error message.
- * @param {Array<String>}  [requiredAttrs=[]] Required attributes for previous EJS template. Rendering fail if those attributes are undefined.
+ * @param {Array<String>} [requiredAttrs=[]] Required attributes for previous EJS template. Rendering fail if those attributes are undefined.
  * @return {undefined}
  */
 
 export function registerError(name: string, template: string = '', requiredAttrs: string[] = []): void {
 	Validator(name, 'name').exist().string().match(/^[a-z][a-zA-Z]*$/).try();
+	Validator(Errors[name], `Errors.${name}`).not.exist().try();
 	Validator(template, 'template').exist().string().try();
 	Validator(requiredAttrs, 'requiredAttrs').exist().array().each(child => child.instance('String')).try();
-	Validator(Errors[name], `Errors.${name}`).not.exist().try();
 
 	Errors[name] = setupProducer(_.snakeCase(name).toUpperCase(), template, requiredAttrs);
 }
@@ -75,10 +83,7 @@ export function registerError(name: string, template: string = '', requiredAttrs
  * Use for serialize / unserialize.<br/>
  * Return parameter if parse fail.<br/>
  *
- * @function Eratum.parse
- * @memberof Eratum
- * @static
- * @param  {Object} object Object to parse.
+ * @param {Object} object Object to parse.
  * @return {Eratum|Error|*} Rebuilt error
  */
 

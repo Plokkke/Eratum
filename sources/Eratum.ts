@@ -1,88 +1,79 @@
 import _ from 'lodash';
 
-import { insertIf } from './utils';
-
-export interface EratumOptions {
-	cause?: any;
-	origin?: string | null;
-	[key: string]: any;
-}
-
+/**
+ * JSON serialization of Eratum object
+ */
 export interface IEratum {
 	tag: string;
 	message: string;
-	cause?: Eratum | any;
-	origin?: string | null;
+	cause?: any;
+	origin?: string;
 	stack?: string;
 }
 
-export type EratumConstructor = { new(message: string, tag: string, options: EratumOptions): Eratum };
+function serializeError(error: any, isStackEnabled: boolean): typeof error extends (infer U)[]
+	? (U extends Error ? IEratum[] : U[])
+	: (typeof error extends Error ? number : typeof error) {
+	if (Array.isArray(error)) {
+		return error.map(err => serializeError(err, isStackEnabled));
+	}
+
+	if (error instanceof Error) {
+		return _.pickBy({
+			tag: 'INTERNAL_ERROR',
+			message: error.message,
+			...isStackEnabled && { stack: error.stack },
+			...error instanceof Eratum && {
+				tag: error.tag,
+				cause: serializeError(error.cause, isStackEnabled),
+				origin: error.origin,
+			},
+		}, Boolean);
+	}
+
+	return error;
+
+}
+
+/**
+ * Eratum constructor signature
+ */
+export type EratumConstructor = { new(message: string, tag: string, cause?: any, origin?: string): Eratum };
 
 /**
  * @extends Error
+ * @param {String} message Human readable message explaining error.
  * @param {String} tag Unique string identifier for this error type. Must be capitalized snake case (/^[A-Z_]*$/).
- * @param {String} template EJS template to build error message.
- * @param {Object} parameters EJS parameters for template rendering.
- * @param {Eratum|Error|*} cause Previous Error generating this one.
+ * @param {Eratum|Eratum[]} cause Previous Error generating this one.
+ * @param {String} origin Human readable hint about thrower. (capitalized snake case recommended)
  */
 export class Eratum extends Error implements IEratum {
+	/**
+	 * Define if stack trace should be included in serialization or not.
+	 */
 	static isStackEnabled = (process.env.NODE_ENV === 'development');
+	/**
+	 * Prefix for origin. Use it for processus identifier.
+	 */
 	static origin = '';
-
-	public cause: any;
-	public origin: string | null;
-	public parameters: object;
 
 	constructor(
 		message: string,
 		public tag: string,
-		{ cause = null, origin = null, ...parameters }: EratumOptions,
-	) {
-		super(message);
+		public cause: any = null,
+		private module: string = '',
+	) { super(message); }
 
-		this.cause = cause;
-		this.origin = origin;
-		this.parameters = parameters;
+	get origin() {
+		return _.compact([Eratum.origin, this.module]).join('_');
 	}
 
 	/**
-	 * Build an simplified object with code, tag, message, cause(if exists) and stack trace(if enable)
+	 * Serilize error in JSON ready object.
 	 *
-	 * @return {Object} Raw object
+	 * @return {IEratum} Raw object
 	 */
-	get(): IEratum {
-		return {
-			tag: this.tag,
-			message: this.message,
-			...this.cause && { cause: Eratum.get(this.cause) },
-			...(Eratum.origin || this.origin) && { origin: _.compact([Eratum.origin, this.origin]).join('_') },
-			...Eratum.isStackEnabled && { stack: this.stack },
-		};
+	get(isStackEnabled: boolean = Eratum.isStackEnabled): IEratum {
+		return serializeError(this, isStackEnabled);
 	}
-
-	/**
-	 * Build a simplified object as instance.get(), handle native Error, return parameter if not an Error.
-	 *
-	 *  @function Eratum.get
-	 * @memberof Eratum
-	 * @static
-	 * @param  {Eratum|Error|*} error Native Error, Enhanced Error, or any.
-	 * @return {Object} Simplified object
-	 */
-	static get(error: any): typeof error extends Error ? number : any {
-		if (error instanceof Eratum) {
-			return error.get();
-		}
-		if (error instanceof Error) {
-			const e = _.pick(error, ['message', ...insertIf(Eratum.isStackEnabled, 'stack')]);
-			return e;
-		}
-
-		if (Array.isArray(error)) {
-			return error.map(err => Eratum.get(err));
-		}
-
-		return error;
-	}
-
 }

@@ -58,6 +58,12 @@ registerError('invalid', 'Resource(<%- name %>) is invalid.<% if (locals.reason)
  * @property {String} TAG INVALID_TYPE
  */
 registerError('invalidType', 'Resource(<%- name %>) as invalid type(<%- actualType %>) instead of (<%- expectedType %>).', ['name', 'actualType', 'expectedType']);
+/**
+ * @memberof Errors
+ * @function invalidFormat
+ * @property {String} TAG INVALID_FORMAT
+ */
+registerError('invalidFormat', '<%- name %>(<%- value %>) format is not valid(<%- format %>)', ['name', 'value', 'format']);
 
 /**
  * @memberof Errors
@@ -87,31 +93,6 @@ registerError('notEqual', '<%- name %>(<%- actualValue %>) is not equal to <%- e
 
 /**
  * @memberof Errors
- * @function greaterThan
- * @property {String} TAG GREATER_THAN
- */
-registerError('greaterThan', '<%- name %>(<%- value %>) is greater than <%- limit %>', ['name', 'value', 'limit']);
-/**
- * @memberof Errors
- * @function notGreaterThan
- * @property {String} TAG NOT_GREATER_THAN
- */
-registerError('notGreaterThan', '<%- name %>(<%- value %>) is not greater than <%- limit %>', ['name', 'value', 'limit']);
-/**
- * @memberof Errors
- * @function lowerThan
- * @property {String} TAG LOWER_THAN
- */
-registerError('lowerThan', '<%- name %>(<%- value %>) is lower than <%- limit %>', ['name', 'value', 'limit']);
-/**
- * @memberof Errors
- * @function notLowerThan
- * @property {String} TAG NOT_LOWER_THAN
- */
-registerError('notLowerThan', '<%- name %>(<%- value %>) is not lower than <%- limit %>', ['name', 'value', 'limit']);
-
-/**
- * @memberof Errors
  * @function included
  * @property {String} TAG INCLUDED
  */
@@ -122,9 +103,3 @@ registerError('included', '<%- name %>(<%- value %>) is included in <%- forbidde
  * @property {String} TAG NOT_INCLUDED
  */
 registerError('notIncluded', '<%- name %>(<%- value %>) is not included in <%- possibleValues %>', ['name', 'value', 'possibleValues']);
-/**
- * @memberof Errors
- * @function invalidFormat
- * @property {String} TAG INVALID_FORMAT
- */
-registerError('invalidFormat', '<%- name %>(<%- value %>) format is not valid(<%- format %>)', ['name', 'value', 'format']);
