@@ -1,19 +1,18 @@
 {
 	"compilerOptions": {
-		"target": "ES2018",
-		"module": "commonjs",
-		"sourceMap": true,
-		"outDir": "./build",
-		"strict": true,
-		"strictNullChecks": true,
-		"alwaysStrict": true,
-		"moduleResolution": "node",
 		"baseUrl": ".",
+		"declaration": true,
+		"esModuleInterop": true,
+		"module": "CommonJS",
+		"moduleResolution": "node",
+		"outDir": "./build",
 		"paths": {
 			"#project/*": [
 				"sources/*"
 			]
 		},
-		"esModuleInterop": true
+		"sourceMap": true,
+		"strict": true,
+		"target": "ES2020"
 	}
 }

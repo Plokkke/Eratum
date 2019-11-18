@@ -24,6 +24,7 @@
 			160
 		],
 		"no-floating-promises": true,
+		"object-shorthand-properties-first": false,
 		"prefer-const": [
 			true,
 			{
