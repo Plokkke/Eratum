@@ -57,6 +57,7 @@ registerError('invalid', 'Resource(<%- name %>) is invalid.<% if (locals.reason)
  * @function invalidType
  * @property {String} TAG INVALID_TYPE
  */
+// tslint:disable-next-line: max-line-length
 registerError('invalidType', 'Resource(<%- name %>) as invalid type(<%- actualType %>) instead of (<%- expectedType %>).', ['name', 'actualType', 'expectedType']);
 /**
  * @memberof Errors

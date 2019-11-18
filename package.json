@@ -22,9 +22,11 @@
 	"scripts": {
 		"build": "tsc",
 		"coverage": "nyc npm run test",
-		"prepare": "npm run build",
-		"prepublishOnly": "npm test",
-		"test": "mocha -r ts-node/register **/*.test.ts **/*.test.js"
+		"lint": "tslint -p tsconfig.json",
+		"produce": "npm run lint && npm run build && npm run test",
+		"postversion": "git push && git push --tags && npm publish",
+		"test": "mocha -r ts-node/register **/*.test.ts **/*.test.js",
+		"version": "npm run produce"
 	},
 	"dependencies": {
 		"@types/ejs": "^2.6.3",
