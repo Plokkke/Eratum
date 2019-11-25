@@ -61,7 +61,7 @@ export class Eratum extends Error implements IEratum {
 		message: string,
 		public tag: string,
 		public cause: any = null,
-		private module: string = '',
+		private readonly module: string = '',
 	) { super(message); }
 
 	get origin() {

@@ -175,9 +175,8 @@ describe('Typescript Errors unit tests', () => {
 		it('Invalid error should throw doesntExist error', () => {
 			const errorProducer = Errors.doesntExist;
 			const unknowTag = 'UNKNOWN_TAG';
-			const error = { message: 'bonjour', tag: unknowTag };
 			try {
-				parseError(error);
+				parseError({ message: 'bonjour', tag: unknowTag });
 			} catch (error) {
 				expect(error).instanceOf(errorProducer.class);
 				expect(error).property('tag').equal(errorProducer.tag);

@@ -8,30 +8,32 @@ import { Eratum } from './Eratum';
 export default Errors;
 export { Eratum, registerError, parseError };
 
+const reasonTemplate = '<% if (locals.reason) { %><%- reason %><% } %>';
+
 /**
  * @memberof Errors
  * @function internalError
  * @property {String} TAG INTERNAL_ERROR
  */
-registerError('internalError', '<% if (locals.reason) { %><%- reason %><% } %>');
+registerError('internalError', reasonTemplate);
 /**
  * @memberof Errors
  * @function unexpectedError
  * @property {String} TAG UNEXPECTED_ERROR
  */
-registerError('unexpectedError', '<% if (locals.reason) { %><%- reason %><% } %>');
+registerError('unexpectedError', reasonTemplate);
 /**
  * @memberof Errors
  * @function programingFault
  * @property {String} TAG PROGRAMING_FAULT
  */
-registerError('programingFault', '<% if (locals.reason) { %><%- reason %><% } %>');
+registerError('programingFault', reasonTemplate);
 /**
  * @memberof Errors
  * @function notYetImplemented
  * @property {String} TAG NOT_YET_IMPLEMENTED
  */
-registerError('notYetImplemented', 'Feature(<%- name %>) is not yet implemented.<% if (locals.reason) { %><%- reason %><% } %>', ['name']);
+registerError('notYetImplemented', `Feature(<%- name %>) is not yet implemented.${reasonTemplate}`, ['name']);
 
 /**
  * @memberof Errors
@@ -51,7 +53,7 @@ registerError('notInitialized', 'Resource(<%- name %>) is not initialized.', ['n
  * @function invalid
  * @property {String} TAG INVALID
  */
-registerError('invalid', 'Resource(<%- name %>) is invalid.<% if (locals.reason) { %><%- reason %><% } %>', ['name']);
+registerError('invalid', `Resource(<%- name %>) is invalid.${reasonTemplate}`, ['name']);
 /**
  * @memberof Errors
  * @function invalidType

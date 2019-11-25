@@ -159,6 +159,12 @@ All errors have the same producer signature.
 		- **name**
 		- **actualType**
 		- **expectedType**
+- invalidFormat
+	- **Tag** `INVALID_FORMAT`
+	- Parameters
+		- **name**
+		- **value**
+		- **format**
 - exist
 	- **Tag** `EXIST`
 	- Parameters

@@ -1,8 +1,11 @@
-node_modules/
-coverage/
 .nyc_output/
-docs/
+.scannerwork/
+.vscode/
 build/
+coverage/
+docs/
+node_modules/
+reports/
 
 npm-debug.log
 *.db

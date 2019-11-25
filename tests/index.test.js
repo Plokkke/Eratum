@@ -1,15 +1,11 @@
-const { expect } = require('chai');
 require('mocha');
+const { expect } = require('chai');
+const { randomString, SYMOBOLS } = require('@plokkke/toolbox');
 
 const { default: Errors, registerError } = require('../sources/index.ts');
 
-function randomString(length) {
-	const characters = 'azertyuiopqsdfghjklmwxcvbn';
-	let result = '';
-	for (let i = 0; i < length; i++) {
-		result += characters.charAt(Math.floor(Math.random() * characters.length));
-	}
-	return result;
+function identifier() {
+	return randomString(16, SYMOBOLS.ALPHA_LOWER);
 }
 
 describe('Javascript Errors unit tests', () => {
@@ -42,8 +38,8 @@ describe('Javascript Errors unit tests', () => {
 				expect(error.parameters).property('expectedType').equal('String');
 			}
 		});
-		it('registerError(\'randomString\', null) should throw doesntExist error', () => {
-			const name = randomString(16);
+		it('registerError(\'identifier\', null) should throw doesntExist error', () => {
+			const name = identifier();
 			const template = null;
 			const errorName = 'doesntExist';
 
@@ -57,8 +53,8 @@ describe('Javascript Errors unit tests', () => {
 				expect(error.parameters).property('name').equal('template');
 			}
 		});
-		it('registerError(\'randomString\', 42) should throw invalidType error', () => {
-			const name = randomString(16);
+		it('registerError(\'identifier\', 42) should throw invalidType error', () => {
+			const name = identifier();
 			const template = 42;
 			const errorName = 'invalidType';
 
@@ -74,8 +70,8 @@ describe('Javascript Errors unit tests', () => {
 				expect(error.parameters).property('expectedType').equal('String');
 			}
 		});
-		it('registerError(\'randomString\', \'\', null) should throw doesntExist error', () => {
-			const name = randomString(16);
+		it('registerError(\'identifier\', \'\', null) should throw doesntExist error', () => {
+			const name = identifier();
 			const template = '';
 			const requiredAttrs = null;
 			const errorName = 'doesntExist';
@@ -90,8 +86,8 @@ describe('Javascript Errors unit tests', () => {
 				expect(error.parameters).property('name').equal('requiredAttrs');
 			}
 		});
-		it('registerError(\'randomString\', \'\', 42) should throw invalidType error', () => {
-			const name = randomString(16);
+		it('registerError(\'identifier\', \'\', 42) should throw invalidType error', () => {
+			const name = identifier();
 			const template = '';
 			const requiredAttrs = 42;
 			const errorName = 'invalidType';
@@ -108,8 +104,8 @@ describe('Javascript Errors unit tests', () => {
 				expect(error.parameters).property('expectedType').equal('Array');
 			}
 		});
-		it('registerError(\'randomString\', \'\', [42]) should throw invalidType error', () => {
-			const name = randomString(16);
+		it('registerError(\'identifier\', \'\', [42]) should throw invalidType error', () => {
+			const name = identifier();
 			const template = '';
 			const attribute = 42;
 			const errorName = 'invalid';
