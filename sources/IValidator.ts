@@ -1,9 +1,7 @@
-import _ from 'lodash';
-
 export type TypeOf = 'string' | 'number' | 'bigint' | 'boolean' | 'symbol' | 'undefined' | 'object' | 'function';
 export type ChainApplier = (validator: IValidator) => void;
-export type PropsApplier = { key: string, chain: ChainApplier, optional?: boolean } | string;
-export type SafePropsApplier = { key: string, chain: ChainApplier, optional: boolean };
+export type PropsApplier = { key: string; chain: ChainApplier; optional?: boolean } | string;
+export type SafePropsApplier = { key: string; chain: ChainApplier; optional: boolean };
 
 export interface IValidator {
 	must: this;

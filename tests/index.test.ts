@@ -1,5 +1,5 @@
-import { expect } from 'chai';
 import 'mocha';
+import { expect } from 'chai';
 
 import Errors, { Eratum, registerError, parseError } from '../sources/index';
 
@@ -26,7 +26,7 @@ describe('Typescript Errors unit tests', () => {
 		it('registerError(\'outOfBound\', ...) should create tag and constructor', () => {
 			const tag = 'OUT_OF_BOUND';
 			const name = 'outOfBound';
-			registerError(name, 'Resource(<%= name %>) is out of bound(<%= bound %>)', ['name', 'bound']);
+			registerError(name, 'Resource(<%= name %>) is out of bound(<%= bound %>)', [ 'name', 'bound' ]);
 
 			expect(Errors).to.property(name);
 			expect(Errors[name]).to.property('tag').equal(tag);
@@ -124,7 +124,7 @@ describe('Typescript Errors unit tests', () => {
 		});
 		it('Should build neasted error object with array cause', () => {
 			const message = 'Some bug';
-			const error = Errors.internalError({ cause: [Errors.internalError(), new RangeError(message), 42] });
+			const error = Errors.internalError({ cause: [ Errors.internalError(), new RangeError(message), 42 ] });
 			const errorObj = error.get();
 
 			expect(errorObj).property('message');
@@ -142,7 +142,7 @@ describe('Typescript Errors unit tests', () => {
 	describe('parseError()', () => {
 		it('Invalid error should return self object', () => {
 			// Errors.isStackEnabled = true;
-			[undefined, 12, { a: 12, stack: true }, { message: 'bonjour', age: 14 }].forEach((invalidError) => {
+			[ undefined, 12, { a: 12, stack: true }, { message: 'bonjour', age: 14 } ].forEach((invalidError) => {
 				expect(parseError(invalidError)).equals(invalidError);
 			});
 		});
@@ -152,7 +152,7 @@ describe('Typescript Errors unit tests', () => {
 			expect(error).instanceof(Error).property('message').equals(errorObj.message);
 		});
 		it('Valid error array should return Error array', () => {
-			const errorObjs = [{ message: 'bonjour' }, { message: 'coucou' }];
+			const errorObjs = [ { message: 'bonjour' }, { message: 'coucou' } ];
 			const errors: Eratum[] = parseError(errorObjs);
 			errors.forEach((error, idx) => {
 				expect(error).instanceof(Error).property('message').equals(errorObjs[idx].message);
@@ -199,6 +199,14 @@ describe('Typescript Errors unit tests', () => {
 			expect(built.cause).property('message').equals(cause1.message);
 			expect(built.cause).property('cause').instanceOf(cause2Factory.class);
 			expect(built.cause.cause).property('message').equals(cause2.message);
+		});
+	});
+	describe('Deep tag', () => {
+		it('Should build nested error object', () => {
+			Eratum.isStackEnabled = true;
+			const message = 'Some bug';
+			const error = Errors.internalError({ cause: Errors.internalError({ cause: new RangeError(message) }) });
+			expect(error.deepTag).equal('INTERNAL_ERROR#INTERNAL_ERROR#RangeError');
 		});
 	});
 });

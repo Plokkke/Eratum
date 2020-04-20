@@ -1,0 +1,76 @@
+{
+	"extends": [
+		"airbnb-base",
+		"plugin:@typescript-eslint/recommended"
+	],
+	"env": {
+		"node": true,
+		"mocha": true
+	},
+	"globals": {
+		"Promise": "off"
+	},
+	"parser": "@typescript-eslint/parser",
+	"parserOptions": {
+		"ecmaVersion": 9,
+		"sourceType": "module",
+		"ecmaFeatures": {
+			"impliedStrict": true,
+			"jsx": false
+		}
+	},
+	"plugins": [
+		"import",
+		"@typescript-eslint/eslint-plugin"
+	],
+	"settings": {
+		"import/resolver": {
+			"node": {
+				"extensions": [".js", ".jsx", ".ts", ".tsx"]
+			}
+		}
+	},
+	"rules": {
+		"array-bracket-spacing": [ "error", "always" ],
+		"arrow-body-style": 0,
+		"brace-style": [ "error", "1tbs", { "allowSingleLine": false } ],
+		"callback-return": "error",
+		"camelcase": [ "error", { "properties": "always" } ],
+		"comma-dangle": [ "error", "always-multiline", { "functions": "never" } ],
+		"consistent-return": [ "error", { "treatUndefinedAsUnspecified": false } ],
+		"curly": [ "error", "all" ],
+		"eqeqeq": [ "error", "always" ],
+		"function-paren-newline": [ "error", "consistent" ],
+		"global-require": 0,
+		"import/extensions": [ "error", "never" ],
+		"import/no-dynamic-require": 0,
+		"import/prefer-default-export": 0,
+		"indent": [ "error", "tab", { "ignoredNodes": [ "ConditionalExpression" ] } ],
+		"lines-between-class-members": ["error", "always", { "exceptAfterSingleLine": true }],
+		"max-len": [ 1, 200 ],
+		"new-cap": [ "error", { "capIsNew": false, "properties": false } ],
+		"newline-per-chained-call": [ "off" ],
+		"no-bitwise": [ "error", { "allow": [ "^=", "|=", "&=", "<<=", ">>=", ">>>=", "^", "~", "<<", ">>", ">>>" ] } ],
+		"no-cond-assign": [ "error", "except-parens" ],
+		"no-param-reassign": [ "error", { "props": false } ],
+		"no-plusplus": [ "error", { "allowForLoopAfterthoughts": true } ],
+		"no-return-assign": [ "error", "except-parens" ],
+		"no-tabs": [ "off" ],
+		"no-shadow": [ "error", { "builtinGlobals": false, "hoist": "functions" } ],
+		"no-underscore-dangle": [ "error", { "allowAfterThis": true } ],
+		"no-unused-vars": [ "error", { "vars": "all", "args": "after-used", "ignoreRestSiblings": true } ],
+		"no-use-before-define": [ "error", { "classes": false } ],
+		"no-useless-constructor": "off",
+		"nonblock-statement-body-position": [ "error", "below" ],
+		"object-curly-newline": [ "error", { "consistent": true } ],
+		"prefer-const": [ "error", { "destructuring": "all" } ],
+		"prefer-destructuring": [ "off", { "array": false, "object": true } ],
+		"quotes": [ "error", "single" ],
+		"radix": "error",
+		"semi": [ "error", "always", { "omitLastInOneLineBlock": true} ],
+		"valid-jsdoc": [ "error" ],
+		"@typescript-eslint/interface-name-prefix": 0,
+		"@typescript-eslint/no-explicit-any": 0,
+		"@typescript-eslint/no-non-null-assertion": 0
+	}
+}

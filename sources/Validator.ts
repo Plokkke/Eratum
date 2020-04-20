@@ -7,8 +7,8 @@ import { Errors } from './Factory';
 export type ErrorBuilder = () => Error;
 export type Checker<T> = (value: T) => boolean;
 
-function stringify(...args: any[]) {
-	return args.map(item => util.inspect(item, { showHidden: false, depth: null })).join(', ');
+function stringify(...args: any[]): string {
+	return args.map((item) => util.inspect(item, { showHidden: false, depth: null })).join(', ');
 }
 
 function instanceOf(data: any): string {
@@ -24,7 +24,7 @@ function isInstance(item: any, expectedInstance: TypeOf | string | Function): bo
 		return item instanceof expectedInstance;
 	}
 
-	const isFinalInstance = ['Boolean', 'Number', 'String', 'Array', 'Object', 'Function'];
+	const isFinalInstance = [ 'Boolean', 'Number', 'String', 'Array', 'Object', 'Function' ];
 	const proto = Object.getPrototypeOf(item);
 	const type = instanceOf(proto);
 
@@ -51,22 +51,22 @@ class Validator implements IValidator {
 
 	constructor(
 		public value: any,
-		public name: string = '') {
-	}
+		public name: string = '',
+	) { }
 
 	static create(...args: [any, string]): Validator {
 		return new Validator(...args);
 	}
 
 	get isValid(): boolean {
-		return !this._error && (this.children.find(child => !child.isValid) === undefined);
+		return !this._error && (this.children.find((child) => !child.isValid) === undefined);
 	}
 
 	get error(): Error | null {
 		if (this._error) {
 			return this._error;
 		}
-		const childrenErrors = this.children.map(child => child.error).filter(error => !!error);
+		const childrenErrors = this.children.map((child) => child.error).filter((error) => !!error);
 		if (childrenErrors.length) {
 			if (childrenErrors.length === 1) {
 				return Errors.invalid({ name: this.name, cause: childrenErrors[0] });
@@ -112,7 +112,7 @@ class Validator implements IValidator {
 		return this.setModifier(true);
 	}
 
-	get not() {
+	get not(): this {
 		this.modifier = !this.modifier;
 
 		return this;
@@ -127,7 +127,7 @@ class Validator implements IValidator {
 		return this;
 	}
 
-	exist() {
+	exist(): this {
 		return this.invalidateOn(() => instanceOf(this.value) === 'undefined',
 			() => Errors.doesntExist({ name: this.name }),
 			() => Errors.exist({ name: this.name }));
@@ -139,21 +139,21 @@ class Validator implements IValidator {
 			() => Errors.invalidType({ name: this.name, actualType: instanceOf(this.value), expectedType: `!${expectedType}` }));
 	}
 
-	match(regex: RegExp) {
+	match(regex: RegExp): this {
 		return this.invalidateOn(() => !regex.test(this.value),
 			() => Errors.invalidFormat({ name: this.name, value: stringify(this.value), format: `regex(${stringify(regex)})` }),
 			() => Errors.invalidFormat({ name: this.name, value: stringify(this.value), format: `!regex(${stringify(regex)})` }));
 	}
 
-	string() {
+	string(): this {
 		return this.instance('String');
 	}
 
-	object() {
+	object(): this {
 		return this.instance('Object');
 	}
 
-	array() {
+	array(): this {
 		return this.invalidateOn(() => !Array.isArray(this.value),
 			() => Errors.invalidType({ name: this.name, actualType: instanceOf(this.value), expectedType: 'Array' }),
 			() => Errors.invalidType({ name: this.name, actualType: instanceOf(this.value), expectedType: '!Array' }));
@@ -164,7 +164,7 @@ class Validator implements IValidator {
 	}
 
 	or(...args: ChainApplier[]): this {
-		Validator.create(args, 'or.args').each(vChain => vChain.function()).try();
+		Validator.create(args, 'or.args').each((vChain) => vChain.function()).try();
 
 		if (!this.modifier) {
 			throw Errors.programingFault({ reason: '"or" should not be use with not modifier' });
@@ -172,7 +172,7 @@ class Validator implements IValidator {
 
 		try {
 			if (this.isValid) {
-				const errors = _.compact(args.map(apply => Validator.create(this.value, this.name).apply(apply).error));
+				const errors = _.compact(args.map((apply) => Validator.create(this.value, this.name).apply(apply).error));
 
 				if (errors.length === args.length) {
 					this.invalidate(Errors.invalid({ name: this.name, cause: errors }));
@@ -216,9 +216,9 @@ class Validator implements IValidator {
 				};
 
 				switch (typeof arg) {
-					case 'string': applier = { ...applier, key: arg }; break;
-					case 'object': applier = { ...applier, ...arg }; break;
-					default: throw Errors.invalidType({ name: `appliers[${idx}]`, actualType: instanceOf(arg), expectedType: 'String|Object' });
+				case 'string': applier = { ...applier, key: arg }; break;
+				case 'object': applier = { ...applier, ...arg }; break;
+				default: throw Errors.invalidType({ name: `appliers[${idx}]`, actualType: instanceOf(arg), expectedType: 'String|Object' });
 				}
 				return applier as SafePropsApplier;
 			});

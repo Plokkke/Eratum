@@ -29,12 +29,12 @@ let Validator: ValidatorFactory;
 // tslint:disable-next-line: variable-name
 export const Errors: EratumFactory = {};
 
-export function init(v: ValidatorFactory) {
+export function init(v: ValidatorFactory): void {
 	Validator = v;
 }
 
-function findFactory(identifier: string) {
-	const itemFactory = Errors[identifier] || _.find(Errors, producer => producer.tag === identifier);
+function findFactory(identifier: string): EratumProducer {
+	const itemFactory = Errors[identifier] || _.find(Errors, (producer) => producer.tag === identifier);
 	if (!itemFactory) {
 		throw Errors.doesntExist({ name: `Errors.${identifier}`, origin: 'Eratum' });
 	}
@@ -42,22 +42,22 @@ function findFactory(identifier: string) {
 }
 
 function setupProducer(tag: string, template: string, requiredAttrs: string[]): EratumProducer {
-	const producerClass = class extends Eratum {
-		public parameters: { [key: string]: any; };
+	const ProducerClass = class extends Eratum {
+		public parameters: { [key: string]: any };
 		constructor(message: string, { cause, origin, ...parameters }: EratumOptions) {
 			super(message, tag, cause, origin);
 			this.parameters = parameters;
 		}
 	};
-	const producer = function (this: Function, parameters: EratumOptions = {}): any { // Not use arrow syntax to avoid 'this' capture
+	const producer = function producer(this: Function, parameters: EratumOptions = {}): any { // Not use arrow syntax to avoid 'this' capture
 		Validator(parameters, 'parameters').exist().object().keys(...requiredAttrs).try();
-		const error = new producerClass(_.compact([tag, ejs.render(template, parameters)]).join(' - '), parameters);
+		const error = new ProducerClass(_.compact([ tag, ejs.render(template, parameters) ]).join(' - '), parameters);
 		Error.captureStackTrace(error, this);
 
 		return error;
 	};
 	producer.tag = tag;
-	producer.class = producerClass;
+	producer.class = ProducerClass;
 	return producer;
 }
 
@@ -69,11 +69,11 @@ function setupProducer(tag: string, template: string, requiredAttrs: string[]): 
  * @return {undefined}
  */
 
-export function registerError(name: string, template: string = '', requiredAttrs: string[] = []): void {
+export function registerError(name: string, template = '', requiredAttrs: string[] = []): void {
 	Validator(name, 'name').exist().string().match(/^[a-z][a-zA-Z]*$/).try();
 	Validator(Errors[name], `Errors.${name}`).not.exist().try();
 	Validator(template, 'template').exist().string().try();
-	Validator(requiredAttrs, 'requiredAttrs').exist().array().each(child => child.instance('String')).try();
+	Validator(requiredAttrs, 'requiredAttrs').exist().array().each((child) => child.instance('String')).try();
 
 	Errors[name] = setupProducer(_.snakeCase(name).toUpperCase(), template, requiredAttrs);
 }
@@ -87,8 +87,7 @@ export function registerError(name: string, template: string = '', requiredAttrs
  * @return {Eratum|Error|*} Rebuilt error
  */
 
-export function parseError(object: any)
-	: typeof object extends IEratum ? Eratum
+export function parseError(object: any): typeof object extends IEratum ? Eratum
 	: typeof object extends Error ? Error
 	: typeof object {
 	let error = object;

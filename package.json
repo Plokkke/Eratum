@@ -1,6 +1,7 @@
 {
 	"name": "eratum",
-	"version": "2.0.1",
+	"private": false,
+	"version": "2.0.5",
 	"author": "Antoine Caron <acaron@trustdesigner.com>",
 	"license": "MIT",
 	"description": "Module defining wrapper over Error class.",
@@ -12,7 +13,7 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "git://gitlab.com:antoinecaron/eratum.git"
+		"url": "https://gitlab.com/antoinecaron/eratum"
 	},
 	"main": "build/sources/index.js",
 	"types": "build/sources/index.d.ts",
@@ -22,38 +23,43 @@
 	"scripts": {
 		"build": "tsc -p tsconfig.json",
 		"coverage": "nyc npm run test",
-		"lint": "tslint -p tsconfig.json -o reports/tslint.report && eslint --ignore-pattern build -o reports/eslint.report **/**.js",
-		"produce": "npm run lint && npm run build && npm run test",
-		"postversion": "git push && git push --tags && npm run publish",
+		"pregit-tag": "git fetch --all",
+		"git-tag": "PKG_VERSION=$(jq -r \".version\" package.json) && test \"$(git rev-list -n 1 v${PKG_VERSION} 2> /dev/null)\" == \"$(git rev-list -n 1 HEAD)\" || git tag v${PKG_VERSION}",
+		"postgit-tag": "for remote in $(git remote); do git push $remote --tags; done",
+		"lint": "eslint --ignore-pattern build **/**.ts",
+		"produce": "npm run lint && npm run test && npm run build",
+		"prerelease": "git diff --quiet && npm run produce",
+		"release": "npm run git-tag && if [[ $(jq -r \".private\" package.json) = \"false\" ]]; then npm publish --tag next; fi",
 		"test": "mocha -r ts-node/register **/*.test.ts **/*.test.js",
-		"version": "npm run produce"
+		"watch-test": "nodemon -e 'js,ts' -i build -x 'npm run test'"
 	},
 	"dependencies": {
-		"@types/ejs": "^2.6.3",
-		"@types/lodash": "^4.14.149",
-		"@types/node": "^12.12.12",
+		"@types/ejs": "^2.7.0",
+		"@types/lodash": "^4.14.150",
+		"@types/node": "^12.12.36",
 		"ejs": "^2.7.4",
 		"lodash": "^4.17.15"
 	},
 	"devDependencies": {
-		"@plokkke/toolbox": "^0.2.0",
-		"@types/chai": "^4.2.5",
+		"@plokkke/toolbox": "^0.2.1",
+		"@types/chai": "^4.2.11",
 		"@types/mocha": "^5.2.7",
+		"@typescript-eslint/eslint-plugin": "^2.19.2",
+		"@typescript-eslint/parser": "^2.28.0",
 		"chai": "^4.2.0",
-		"eslint": "^6.7.1",
+		"eslint": "^6.8.0",
 		"eslint-config-airbnb-base": "^14.0.0",
-		"eslint-plugin-import": "^2.18.2",
-		"mocha": "^6.2.2",
+		"eslint-plugin-import": "^2.20.1",
+		"mocha": "^6.2.3",
+		"nodemon": "^2.0.3",
 		"nyc": "^14.1.1",
 		"ts-mocha": "^6.0.0",
-		"ts-node": "^8.5.2",
-		"tslint": "^5.20.1",
-		"tslint-config-airbnb": "^5.11.2",
-		"typescript": "^3.7.2"
+		"ts-node": "^8.8.2",
+		"typescript": "^3.8.3"
 	},
 	"nyc": {
 		"extension": [
-			".ts"
+			".js"
 		],
 		"include": [
 			"sources"

@@ -2,7 +2,7 @@ require('mocha');
 const { expect } = require('chai');
 const { randomString, SYMOBOLS } = require('@plokkke/toolbox');
 
-const { default: Errors, registerError } = require('../sources/index.ts');
+const { default: Errors, registerError } = require('../sources/index');
 
 function identifier() {
 	return randomString(16, SYMOBOLS.ALPHA_LOWER);

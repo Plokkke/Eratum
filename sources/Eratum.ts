@@ -15,7 +15,7 @@ function serializeError(error: any, isStackEnabled: boolean): typeof error exten
 	? (U extends Error ? IEratum[] : U[])
 	: (typeof error extends Error ? number : typeof error) {
 	if (Array.isArray(error)) {
-		return error.map(err => serializeError(err, isStackEnabled));
+		return error.map((err) => serializeError(err, isStackEnabled));
 	}
 
 	if (error instanceof Error) {
@@ -23,6 +23,7 @@ function serializeError(error: any, isStackEnabled: boolean): typeof error exten
 			tag: 'INTERNAL_ERROR',
 			message: error.message,
 			...isStackEnabled && { stack: error.stack },
+			// eslint-disable-next-line @typescript-eslint/no-use-before-define
 			...error instanceof Eratum && {
 				tag: error.tag,
 				cause: serializeError(error.cause, isStackEnabled),
@@ -32,7 +33,6 @@ function serializeError(error: any, isStackEnabled: boolean): typeof error exten
 	}
 
 	return error;
-
 }
 
 /**
@@ -62,15 +62,25 @@ export class Eratum extends Error implements IEratum {
 		public tag: string,
 		public cause: any = null,
 		private readonly module: string = '',
-	) { super(message); }
+	) {
+		super(message);
+	}
 
-	get origin() {
-		return _.compact([Eratum.origin, this.module]).join('_');
+	get origin(): string {
+		return _.compact([ Eratum.origin, this.module ]).join('_');
+	}
+
+	get deepTag(): string {
+		const causeDeepTag = this.cause
+			? `#${this.cause instanceof Eratum ? this.cause.deepTag : Object.getPrototypeOf(this.cause).constructor.name}`
+			: '';
+		return `${this.tag}${causeDeepTag}`;
 	}
 
 	/**
 	 * Serilize error in JSON ready object.
 	 *
+	 * @param {boolean} [isStackEnabled=Eratum.isStackEnabled] change default value
 	 * @return {IEratum} Raw object
 	 */
 	get(isStackEnabled: boolean = Eratum.isStackEnabled): IEratum {
