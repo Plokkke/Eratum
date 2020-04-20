@@ -1,7 +1,7 @@
 {
 	"name": "eratum",
 	"private": false,
-	"version": "2.0.5",
+	"version": "2.0.6",
 	"author": "Antoine Caron <acaron@trustdesigner.com>",
 	"license": "MIT",
 	"description": "Module defining wrapper over Error class.",
@@ -11,10 +11,8 @@
 		"Rejections",
 		"Failures"
 	],
-	"repository": {
-		"type": "git",
-		"url": "https://gitlab.com/antoinecaron/eratum"
-	},
+	"homepage": "https://gitlab.com/antoinecaron/eratum",
+	"repository": "gitlab:antoinecaron/eratum",
 	"main": "build/sources/index.js",
 	"types": "build/sources/index.d.ts",
 	"files": [
