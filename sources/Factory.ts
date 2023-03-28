@@ -48,7 +48,14 @@ function setupProducer(tag: string, template: string, requiredAttrs: string[]): 
 			super(message, tag, cause, origin);
 			this.parameters = parameters;
 		}
+
+		get() {
+			const error = super.get();
+			error.parameters = this.parameters;
+			return error;
+		}
 	};
+	// eslint-disable-next-line @typescript-eslint/ban-types
 	const producer = function producer(this: Function, parameters: EratumOptions = {}): any { // Not use arrow syntax to avoid 'this' capture
 		Validator(parameters, 'parameters').exist().object().keys(...requiredAttrs).try();
 		const error = new ProducerClass(_.compact([ tag, ejs.render(template, parameters) ]).join(' - '), parameters);
@@ -86,25 +93,39 @@ export function registerError(name: string, template = '', requiredAttrs: string
  * @param {Object} object Object to parse.
  * @return {Eratum|Error|*} Rebuilt error
  */
+export function parseError<T>(object: T[]): T extends IEratum ? Eratum[]
+	: T extends { message: string } ? Error[]
+	: T[];
+export function parseError<T>(object: T): T extends IEratum ? Eratum
+	: T extends { message: string } ? Error
+	: T;
 
-export function parseError(object: any): typeof object extends IEratum ? Eratum
-	: typeof object extends Error ? Error
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+function parseErrorItem(object: Record<string, unknown>): typeof object extends IEratum ? Eratum
+	: typeof object extends { message: string } ? Error
 	: typeof object {
-	let error = object;
-	if (error && typeof error === 'object') {
-		if (Array.isArray(error)) {
-			return error.map(parseError);
-		}
-		const { message, tag, cause, stack, ...parameters } = error;
-		if (message && tag) {
-			error = new (findFactory(tag).class)(message, { cause: parseError(cause), ...parameters });
-		} else if (message && !tag && !cause && !Object.keys(parameters).length) {
-			error = new Error(message);
-		}
-		if (stack) {
-			error.stack = stack;
-		}
+	if (!object || typeof object !== 'object' || !object.message || typeof object.message !== 'string') {
+		return object;
 	}
 
+	const { message, tag, cause, stack, ...parameters } = object;
+
+	let error;
+	if (tag && typeof tag === 'string') {
+		error = new (findFactory(tag).class)(message, { cause: parseError(cause), ...parameters }) as IEratum;
+	} else {
+		error = new Error(message);
+	}
+	if (stack && typeof stack === 'string') {
+		error.stack = stack;
+	}
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// @ts-ignore
 	return error;
+}
+
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types,@typescript-eslint/adjacent-overload-signatures
+export function parseError(object: any): any {
+	return Array.isArray(object) ? object.map(parseErrorItem) : parseErrorItem(object);
 }

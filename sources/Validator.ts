@@ -3,6 +3,7 @@ import util from 'util';
 
 import { IValidator, ChainApplier, PropsApplier, SafePropsApplier, TypeOf } from './IValidator';
 import { Errors } from './Factory';
+import { Class } from './types';
 
 export type ErrorBuilder = () => Error;
 export type Checker<T> = (value: T) => boolean;
@@ -15,7 +16,7 @@ function instanceOf(data: any): string {
 	return (data !== undefined && data !== null) ? data.constructor.name : 'undefined';
 }
 
-function isInstance(item: any, expectedInstance: TypeOf | string | Function): boolean {
+function isInstance(item: any, expectedInstance: TypeOf | string | Class<any>): boolean {
 	if (item === undefined || item === null) {
 		return expectedInstance === 'undefined';
 	}
@@ -133,7 +134,7 @@ class Validator implements IValidator {
 			() => Errors.exist({ name: this.name }));
 	}
 
-	instance(expectedType: string | Function): this {
+	instance(expectedType: string | Class<any>): this {
 		return this.invalidateOn(() => !isInstance(this.value, expectedType),
 			() => Errors.invalidType({ name: this.name, actualType: instanceOf(this.value), expectedType: `${expectedType}` }),
 			() => Errors.invalidType({ name: this.name, actualType: instanceOf(this.value), expectedType: `!${expectedType}` }));

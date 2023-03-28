@@ -9,6 +9,7 @@ export interface IEratum {
 	cause?: any;
 	origin?: string;
 	stack?: string;
+	parameters?: { [key: string]: any };
 }
 
 function serializeError(error: any, isStackEnabled: boolean): typeof error extends (infer U)[]
@@ -34,11 +35,6 @@ function serializeError(error: any, isStackEnabled: boolean): typeof error exten
 
 	return error;
 }
-
-/**
- * Eratum constructor signature
- */
-export type EratumConstructor = { new(message: string, tag: string, cause?: any, origin?: string): Eratum };
 
 /**
  * @extends Error
@@ -87,3 +83,8 @@ export class Eratum extends Error implements IEratum {
 		return serializeError(this, isStackEnabled);
 	}
 }
+
+/**
+ * Eratum constructor signature
+ */
+export type EratumConstructor = { new(message: string, tag: string, cause?: any, origin?: string): Eratum };

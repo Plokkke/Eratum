@@ -1,4 +1,7 @@
+import { Class } from './types';
+
 export type TypeOf = 'string' | 'number' | 'bigint' | 'boolean' | 'symbol' | 'undefined' | 'object' | 'function';
+// eslint-disable-next-line no-use-before-define
 export type ChainApplier = (validator: IValidator) => void;
 export type PropsApplier = { key: string; chain: ChainApplier; optional?: boolean } | string;
 export type SafePropsApplier = { key: string; chain: ChainApplier; optional: boolean };
@@ -27,7 +30,7 @@ export interface IValidator {
 	resetModifier(): this;
 	apply(chain: ChainApplier): this;
 	exist(): this;
-	instance(expectedType: string | Function): this;
+	instance(expectedType: string | Class<any>): this;
 	match(regex: RegExp): this;
 	string(): this;
 	object(): this;

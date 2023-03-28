@@ -142,7 +142,7 @@ describe('Typescript Errors unit tests', () => {
 	describe('parseError()', () => {
 		it('Invalid error should return self object', () => {
 			// Errors.isStackEnabled = true;
-			[ undefined, 12, { a: 12, stack: true }, { message: 'bonjour', age: 14 } ].forEach((invalidError) => {
+			[ undefined, 12, { a: 12, stack: true } ].forEach((invalidError) => {
 				expect(parseError(invalidError)).equals(invalidError);
 			});
 		});
@@ -153,7 +153,7 @@ describe('Typescript Errors unit tests', () => {
 		});
 		it('Valid error array should return Error array', () => {
 			const errorObjs = [ { message: 'bonjour' }, { message: 'coucou' } ];
-			const errors: Eratum[] = parseError(errorObjs);
+			const errors: Error[] = parseError(errorObjs);
 			errors.forEach((error, idx) => {
 				expect(error).instanceof(Error).property('message').equals(errorObjs[idx].message);
 			});

@@ -1,6 +1,8 @@
 {
 	"extends": [
 		"airbnb-base",
+		"eslint:recommended",
+		"plugin:@typescript-eslint/eslint-recommended",
 		"plugin:@typescript-eslint/recommended"
 	],
 	"env": {
@@ -58,7 +60,7 @@
 		"no-tabs": [ "off" ],
 		"no-shadow": [ "error", { "builtinGlobals": false, "hoist": "functions" } ],
 		"no-underscore-dangle": [ "error", { "allowAfterThis": true } ],
-		"no-unused-vars": [ "error", { "vars": "all", "args": "after-used", "ignoreRestSiblings": true } ],
+		"no-unused-vars": "off",
 		"no-use-before-define": [ "error", { "classes": false } ],
 		"no-useless-constructor": "off",
 		"nonblock-statement-body-position": [ "error", "below" ],
@@ -71,6 +73,7 @@
 		"valid-jsdoc": [ "error" ],
 		"@typescript-eslint/interface-name-prefix": 0,
 		"@typescript-eslint/no-explicit-any": 0,
-		"@typescript-eslint/no-non-null-assertion": 0
+		"@typescript-eslint/no-non-null-assertion": 0,
+		"@typescript-eslint/no-unused-vars": [ "error", { "vars": "all", "args": "after-used", "ignoreRestSiblings": true } ]
 	}
 }
