@@ -1,7 +1,7 @@
 {
 	"name": "eratum",
 	"private": false,
-	"version": "2.1.0",
+	"version": "2.1.1",
 	"author": "Antoine Caron <acaron@trustdesigner.com>",
 	"license": "MIT",
 	"description": "Module defining wrapper over Error class.",
