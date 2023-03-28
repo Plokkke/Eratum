@@ -27,6 +27,7 @@ function serializeError(error: any, isStackEnabled: boolean): typeof error exten
 			// eslint-disable-next-line @typescript-eslint/no-use-before-define
 			...error instanceof Eratum && {
 				tag: error.tag,
+				parameters: error.parameters,
 				cause: serializeError(error.cause, isStackEnabled),
 				origin: error.origin,
 			},
@@ -55,8 +56,10 @@ export class Eratum extends Error implements IEratum {
 
 	constructor(
 		message: string,
-		public tag: string,
-		public cause: any = null,
+		public readonly tag: string,
+		public readonly parameters: { [key: string]: any },
+
+		public readonly cause: any = null,
 		private readonly module: string = '',
 	) {
 		super(message);

@@ -16,7 +16,6 @@ export interface EratumOptions {
 interface EratumProducer {
 	(parameters?: EratumOptions): Eratum;
 	tag: string;
-	class: { new(message: string, options: EratumOptions): Eratum };
 }
 
 interface EratumFactory {
@@ -33,38 +32,17 @@ export function init(v: ValidatorFactory): void {
 	Validator = v;
 }
 
-function findFactory(identifier: string): EratumProducer {
-	const itemFactory = Errors[identifier] || _.find(Errors, (producer) => producer.tag === identifier);
-	if (!itemFactory) {
-		throw Errors.doesntExist({ name: `Errors.${identifier}`, origin: 'Eratum' });
-	}
-	return itemFactory;
-}
-
 function setupProducer(tag: string, template: string, requiredAttrs: string[]): EratumProducer {
-	const ProducerClass = class extends Eratum {
-		public parameters: { [key: string]: any };
-		constructor(message: string, { cause, origin, ...parameters }: EratumOptions) {
-			super(message, tag, cause, origin);
-			this.parameters = parameters;
-		}
-
-		get() {
-			const error = super.get();
-			error.parameters = this.parameters;
-			return error;
-		}
-	};
 	// eslint-disable-next-line @typescript-eslint/ban-types
-	const producer = function producer(this: Function, parameters: EratumOptions = {}): any { // Not use arrow syntax to avoid 'this' capture
-		Validator(parameters, 'parameters').exist().object().keys(...requiredAttrs).try();
-		const error = new ProducerClass(_.compact([ tag, ejs.render(template, parameters) ]).join(' - '), parameters);
+	const producer = function producer(this: Function, options: EratumOptions = {}): Eratum { // Not use arrow syntax to avoid 'this' capture
+		Validator(options, 'options').exist().object().keys(...requiredAttrs).try();
+		const { cause, origin, ...parameters } = options;
+		const error = new Eratum(_.compact([ tag, ejs.render(template, options) ]).join(' - '), tag, parameters, cause, origin);
 		Error.captureStackTrace(error, this);
 
 		return error;
 	};
 	producer.tag = tag;
-	producer.class = ProducerClass;
 	return producer;
 }
 
@@ -109,11 +87,11 @@ function parseErrorItem(object: Record<string, unknown>): typeof object extends 
 		return object;
 	}
 
-	const { message, tag, cause, stack, ...parameters } = object;
+	const { message, tag, cause, stack, module, ...parameters } = object;
 
 	let error;
 	if (tag && typeof tag === 'string') {
-		error = new (findFactory(tag).class)(message, { cause: parseError(cause), ...parameters }) as IEratum;
+		error = new Eratum(message, tag, parameters, parseError(cause));
 	} else {
 		error = new Error(message);
 	}

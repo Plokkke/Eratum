@@ -12,16 +12,9 @@ describe('Typescript Errors unit tests', () => {
 
 			expect(Errors).to.property(name);
 			expect(Errors[name]).to.property('tag').equal(tag);
-			expect(Errors[name]).to.property('class');
 
 			const error = Errors[name]();
 			expect(error.tag).equal(tag);
-		});
-		it('register should generate unique class', () => {
-			const error = Errors.programingFault();
-			expect(Errors.programingFault.class).not.equal(Errors.internalError.class);
-			expect(error).instanceOf(Errors.programingFault.class);
-			expect(error).not.instanceOf(Errors.internalError.class);
 		});
 		it('registerError(\'outOfBound\', ...) should create tag and constructor', () => {
 			const tag = 'OUT_OF_BOUND';
@@ -30,7 +23,6 @@ describe('Typescript Errors unit tests', () => {
 
 			expect(Errors).to.property(name);
 			expect(Errors[name]).to.property('tag').equal(tag);
-			expect(Errors[name]).to.property('class');
 
 			const error = Errors[name]({ name: 'index', bound: 10 });
 			expect(error.tag).equal(tag);
@@ -41,9 +33,10 @@ describe('Typescript Errors unit tests', () => {
 				registerError(name);
 				expect.fail();
 			} catch (error) {
-				expect(error).instanceOf(Errors.invalidFormat.class);
-				expect(error.parameters).property('name').equal('name');
-				expect(error.parameters).property('value').equal(`'${name}'`);
+				expect(error).instanceOf(Eratum);
+				const eratum = <Eratum> error;
+				expect(eratum.parameters).property('name').equal('name');
+				expect(eratum.parameters).property('value').equal(`'${name}'`);
 			}
 		});
 		it('registerError(\'invalidFormat\') should throw EXIST error', () => {
@@ -51,8 +44,9 @@ describe('Typescript Errors unit tests', () => {
 			try {
 				registerError(name);
 			} catch (error) {
-				expect(error).instanceOf(Errors.exist.class);
-				expect(error.parameters).property('name').equal(`Errors.${name}`);
+				expect(error).instanceOf(Eratum);
+				const eratum = <Eratum> error;
+				expect(eratum.parameters).property('name').equal(`Errors.${name}`);
 			}
 		});
 	});
@@ -63,10 +57,11 @@ describe('Typescript Errors unit tests', () => {
 				Errors.exist();
 				expect.fail();
 			} catch (error) {
-				expect(error).instanceOf(Errors.invalid.class);
-				expect(error.parameters).property('name').equal('parameters');
-				expect(error.cause).instanceOf(Errors.doesntExist.class);
-				expect(error.cause.parameters).property('name').equal('parameters.name');
+				expect(error).instanceOf(Eratum);
+				const eratum = <Eratum> error;
+				expect(eratum.parameters).property('name').equal('options');
+				expect(eratum.cause).instanceOf(Eratum);
+				expect(eratum.cause.parameters).property('name').equal('options.name');
 			}
 		});
 	});
@@ -169,7 +164,7 @@ describe('Typescript Errors unit tests', () => {
 			const errorFactory = Errors.exist;
 			const error = { message: 'bonjour', tag: errorFactory.tag };
 			const built = parseError(error);
-			expect(built).instanceof(errorFactory.class);
+			expect(built).instanceof(Eratum);
 			expect(built).property('message').equals(error.message);
 		});
 		it('Invalid error should throw doesntExist error', () => {
@@ -178,10 +173,11 @@ describe('Typescript Errors unit tests', () => {
 			try {
 				parseError({ message: 'bonjour', tag: unknowTag });
 			} catch (error) {
-				expect(error).instanceOf(errorProducer.class);
-				expect(error).property('tag').equal(errorProducer.tag);
-				expect(error).property('parameters').a('object');
-				expect(error.parameters).property('name').equal(`Errors.${unknowTag}`);
+				expect(error).instanceOf(Eratum);
+				const eratum = <Eratum> error;
+				expect(eratum).property('tag').equal(errorProducer.tag);
+				expect(eratum).property('parameters').a('object');
+				expect(eratum.parameters).property('name').equal(`Errors.${unknowTag}`);
 			}
 		});
 		it('Valid error should return Eratum object with neasted cause', () => {
@@ -193,11 +189,11 @@ describe('Typescript Errors unit tests', () => {
 			const error = { message: 'bonjour', tag: errorFactory.tag, cause: cause1 };
 			const built = parseError(error);
 
-			expect(built).instanceof(errorFactory.class);
+			expect(built).instanceof(Eratum);
 			expect(built).property('message').equals(error.message);
-			expect(built).property('cause').instanceOf(cause1Factory.class);
+			expect(built).property('cause').instanceOf(Eratum);
 			expect(built.cause).property('message').equals(cause1.message);
-			expect(built.cause).property('cause').instanceOf(cause2Factory.class);
+			expect(built.cause).property('cause').instanceOf(Eratum);
 			expect(built.cause.cause).property('message').equals(cause2.message);
 		});
 	});

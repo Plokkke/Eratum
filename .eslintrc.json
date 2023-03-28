@@ -38,7 +38,7 @@
 		"brace-style": [ "error", "1tbs", { "allowSingleLine": false } ],
 		"callback-return": "error",
 		"camelcase": [ "error", { "properties": "always" } ],
-		"comma-dangle": [ "error", "always-multiline", { "functions": "never" } ],
+		"comma-dangle": [ "error", "always-multiline" ],
 		"consistent-return": [ "error", { "treatUndefinedAsUnspecified": false } ],
 		"curly": [ "error", "all" ],
 		"eqeqeq": [ "error", "always" ],
@@ -61,7 +61,7 @@
 		"no-shadow": [ "error", { "builtinGlobals": false, "hoist": "functions" } ],
 		"no-underscore-dangle": [ "error", { "allowAfterThis": true } ],
 		"no-unused-vars": "off",
-		"no-use-before-define": [ "error", { "classes": false } ],
+		"no-use-before-define": "off",
 		"no-useless-constructor": "off",
 		"nonblock-statement-body-position": [ "error", "below" ],
 		"object-curly-newline": [ "error", { "consistent": true } ],
@@ -74,6 +74,7 @@
 		"@typescript-eslint/interface-name-prefix": 0,
 		"@typescript-eslint/no-explicit-any": 0,
 		"@typescript-eslint/no-non-null-assertion": 0,
-		"@typescript-eslint/no-unused-vars": [ "error", { "vars": "all", "args": "after-used", "ignoreRestSiblings": true } ]
+		"@typescript-eslint/no-unused-vars": [ "error", { "vars": "all", "args": "after-used", "ignoreRestSiblings": true } ],
+		"@typescript-eslint/no-use-before-define": [ "error", { "classes": false, "typedefs": false } ]
 	}
 }

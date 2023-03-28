@@ -1,11 +1,23 @@
 require('mocha');
 const { expect } = require('chai');
-const { randomString, SYMOBOLS } = require('@plokkke/toolbox');
 
-const { default: Errors, registerError } = require('../sources/index');
+const { default: Errors, registerError, Eratum } = require('../sources/index');
+
+function randomString(length, symbols) {
+   const safeLength = typeof length === 'number' ? length : 0;
+   const safeSymbols = typeof symbols === 'string' ? symbols : '';
+   if (safeLength && !safeSymbols.length) {
+	  throw Errors.invalid({ name: 'symbols', origin: 'TOOLBOX', cause: Errors.equal({ name: 'symbols.length', value: safeSymbols.length }) });
+   }
+   let result = '';
+   for (let i = 0; i < safeLength; i += 1) {
+	  result += safeSymbols.charAt(Math.floor(Math.random() * safeSymbols.length));
+   }
+   return result;
+}
 
 function identifier() {
-	return randomString(16, SYMOBOLS.ALPHA_LOWER);
+	return randomString(16, 'azertyuiopqsdfghjklmwxcvbn');
 }
 
 describe('Javascript Errors unit tests', () => {
@@ -17,7 +29,7 @@ describe('Javascript Errors unit tests', () => {
 				registerError();
 				expect.fail();
 			} catch (error) {
-				expect(error).instanceOf(Errors[errorName].class);
+				expect(error).instanceOf(Eratum);
 				expect(error).property('tag').equal(Errors[errorName].tag);
 				expect(error).property('parameters').a('object');
 				expect(error.parameters).property('name').equal('name');
@@ -30,7 +42,7 @@ describe('Javascript Errors unit tests', () => {
 				registerError(42);
 				expect.fail();
 			} catch (error) {
-				expect(error).instanceOf(Errors[errorName].class);
+				expect(error).instanceOf(Eratum);
 				expect(error).property('tag').equal(Errors[errorName].tag);
 				expect(error).property('parameters').a('object');
 				expect(error.parameters).property('name').equal('name');
@@ -47,7 +59,7 @@ describe('Javascript Errors unit tests', () => {
 				registerError(name, template);
 				expect.fail();
 			} catch (error) {
-				expect(error, error).instanceOf(Errors[errorName].class);
+				expect(error, error).instanceOf(Eratum);
 				expect(error).property('tag').equal(Errors[errorName].tag);
 				expect(error).property('parameters').a('object');
 				expect(error.parameters).property('name').equal('template');
@@ -62,7 +74,7 @@ describe('Javascript Errors unit tests', () => {
 				registerError(name, template);
 				expect.fail();
 			} catch (error) {
-				expect(error, error).instanceOf(Errors[errorName].class);
+				expect(error, error).instanceOf(Eratum);
 				expect(error).property('tag').equal(Errors[errorName].tag);
 				expect(error).property('parameters').a('object');
 				expect(error.parameters).property('name').equal('template');
@@ -80,7 +92,7 @@ describe('Javascript Errors unit tests', () => {
 				registerError(name, template, requiredAttrs);
 				expect.fail();
 			} catch (error) {
-				expect(error, error).instanceOf(Errors[errorName].class);
+				expect(error, error).instanceOf(Eratum);
 				expect(error).property('tag').equal(Errors[errorName].tag);
 				expect(error).property('parameters').a('object');
 				expect(error.parameters).property('name').equal('requiredAttrs');
@@ -96,7 +108,7 @@ describe('Javascript Errors unit tests', () => {
 				registerError(name, template, requiredAttrs);
 				expect.fail();
 			} catch (error) {
-				expect(error, error).instanceOf(Errors[errorName].class);
+				expect(error, error).instanceOf(Eratum);
 				expect(error).property('tag').equal(Errors[errorName].tag);
 				expect(error).property('parameters').a('object');
 				expect(error.parameters).property('name').equal('requiredAttrs');
@@ -115,9 +127,9 @@ describe('Javascript Errors unit tests', () => {
 				registerError(name, template, [ attribute ]);
 				expect.fail();
 			} catch (error) {
-				expect(error).instanceOf(Errors[errorName].class);
+				expect(error).instanceOf(Eratum);
 				expect(error).property('tag').equal(Errors[errorName].tag);
-				expect(error).property('cause').instanceOf(Errors[errorNameNested].class);
+				expect(error).property('cause').instanceOf(Eratum);
 				expect(error.cause).property('tag').equal(Errors[errorNameNested].tag);
 				expect(error.cause).property('parameters').a('object');
 				expect(error.cause.parameters).property('name').equal('requiredAttrs[0]');
@@ -135,10 +147,10 @@ describe('Javascript Errors unit tests', () => {
 				Errors.exist(null);
 				expect.fail();
 			} catch (error) {
-				expect(error).instanceOf(Errors[errorName].class);
+				expect(error).instanceOf(Eratum);
 				expect(error).property('tag').equal(Errors[errorName].tag);
 				expect(error).property('parameters').a('object');
-				expect(error.parameters).property('name').equal('parameters');
+				expect(error.parameters).property('name').equal('options');
 			}
 		});
 		it('Errors.exist(42) should throw invalidType error', () => {
@@ -148,10 +160,10 @@ describe('Javascript Errors unit tests', () => {
 				Errors.exist(42);
 				expect.fail();
 			} catch (error) {
-				expect(error).instanceOf(Errors[errorName].class);
+				expect(error).instanceOf(Eratum);
 				expect(error).property('tag').equal(Errors[errorName].tag);
 				expect(error).property('parameters').a('object');
-				expect(error.parameters).property('name').equal('parameters');
+				expect(error.parameters).property('name').equal('options');
 				expect(error.parameters).property('actualType').equal('Number');
 				expect(error.parameters).property('expectedType').equal('Object');
 			}
